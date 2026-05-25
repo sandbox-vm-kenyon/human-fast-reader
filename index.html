@@ -1095,7 +1095,10 @@ document.getElementById('help-overlay').addEventListener('click', e => { if (e.t
 // ══════════════════════════════════════════════
 fetchBook('gatsby');
 
-window.addEventListener('blur', () => { if (!paused) stopAll(); render(); });
+// Stop playback when page is hidden (covers iOS app switching, tab switching, lock screen)
+document.addEventListener('visibilitychange', () => { if (document.hidden && !paused) { stopAll(); render(); } });
+// Fallback for desktop focus loss
+window.addEventListener('blur', () => { if (!paused) { stopAll(); render(); } });
 </script>
 </body>
 </html>
