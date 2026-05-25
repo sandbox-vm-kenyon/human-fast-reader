@@ -260,12 +260,12 @@
 
     /* ─────── Mode row ─────── */
     #mode-row {
-      display: flex; gap: 12px; margin: 6px 0;
+      display: flex; gap: 12px; margin: 6px 0; flex-wrap: nowrap; align-items: flex-start;
     }
-    .mode-section { display: flex; flex-direction: column; gap: 5px; }
+    .mode-section { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 0; }
     .mode-section-label { font-size: .78rem; color: var(--muted); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
-    #mode-btns { display: flex; gap: 5px; }
-    .mode-btn { padding: 7px 16px; font-size: .97rem; border-radius: 20px; }
+    #mode-btns, #theme-btns { display: flex; gap: 5px; flex-wrap: nowrap; }
+    .mode-btn { padding: 7px 10px; font-size: .93rem; border-radius: 20px; white-space: nowrap; flex: 1; }
     .mode-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 
     /* ─────── Settings blocks ─────── */
