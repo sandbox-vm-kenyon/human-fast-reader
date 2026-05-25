@@ -75,18 +75,18 @@
     }
     #ctx-before, #ctx-after {
       font-size: var(--word-size);
-      color: rgba(255,255,255,.28);
+      color: #fff;
       font-weight: 700; letter-spacing: .02em;
       white-space: nowrap;
       flex: 1;
       overflow: hidden;
     }
-    #ctx-before { text-align: right; padding-right: .5em; }
-    #ctx-after  { text-align: left;  padding-left:  .5em; }
+    #ctx-before { text-align: right; padding-right: .4em; }
+    #ctx-after  { text-align: left;  padding-left:  .4em; }
     #word-display {
       font-size: var(--word-size);
       font-weight: 700; letter-spacing: .02em; color: #fff;
-      text-align: center; padding: 2px 8px;
+      text-align: center; padding: 2px 0;
       white-space: nowrap;
       flex-shrink: 0;
     }
@@ -404,17 +404,6 @@
     <button class="profile-btn" data-profile="master">Master</button>
   </div>
 
-  <!-- Context words toggle -->
-  <div class="toggle-row">
-    <input type="checkbox" id="ctx-toggle">
-    <label for="ctx-toggle">Show leading &amp; trailing words</label>
-  </div>
-  <div class="slider-row" id="ctx-count-row" style="display:none">
-    <label for="ctx-count">Context</label>
-    <input type="range" id="ctx-count" min="1" max="8" step="1" value="3">
-    <span class="val" id="ctx-count-val">3 words</span>
-  </div>
-
   <!-- Group settings -->
   <div class="slider-row">
     <label for="max-words">Max words</label>
@@ -498,8 +487,7 @@
     </ul>
 
     <h3>Fast mode</h3>
-    <p>One chunk at a time in a fixed spot. Toggle "Show leading &amp; trailing words" to see context
-    words dimmed above and below the current chunk — useful for orientation without breaking the RSVP effect.</p>
+    <p>One chunk at a time in a fixed spot. Leading and trailing words fill the stage on either side, giving peripheral context without breaking the RSVP effect.</p>
 
     <h3>Page mode</h3>
     <p>
@@ -513,7 +501,6 @@
     <ul>
       <li><strong>WPM</strong> — words per minute. Start at 200–250, work up gradually.</li>
       <li><strong>Size</strong> — fast display font size.</li>
-      <li><strong>Context words</strong> — show N words before/after the current chunk (fast mode).</li>
       <li><strong>Max words / Max chars</strong> — group short words into one fast chunk (e.g. "and he was").</li>
       <li><strong>Hyphen at</strong> — split very long words with a hyphen across two chunks.</li>
       <li><strong>Page size</strong> — words per page in Page mode.</li>
@@ -557,10 +544,6 @@ let maxWords        = 1;
 let maxChars        = 12;
 let hyphenThreshold = 15;
 
-// Context words (flash)
-let showCtx    = false;
-let ctxCount   = 3;
-
 // Page settings
 let pageSize    = 200; // words per page
 let pageWordPos = 0;   // word index of current position in page mode
@@ -590,9 +573,6 @@ const sizeValEl = document.getElementById('size-val');
 const maxWordsEl = document.getElementById('max-words');
 const maxCharsEl = document.getElementById('max-chars');
 const hyphenEl   = document.getElementById('hyphen-thr');
-
-const ctxToggle  = document.getElementById('ctx-toggle');
-const ctxCountEl = document.getElementById('ctx-count');
 
 const pageSizeEl = document.getElementById('page-size');
 const bookSelect = document.getElementById('book-select');
@@ -732,9 +712,9 @@ function renderFlash() {
   if (!chunks.length) { wordDisplay.textContent = 'Load text'; ctxBefore.textContent = ''; ctxAfter.textContent = ''; return; }
   wordDisplay.textContent = chunks[pos] || '—';
 
-  if (showCtx && words.length) {
+  if (words.length) {
     const wi = chunkToWord(pos);
-    const { before, after } = scrubContext(words, wi, ctxCount);
+    const { before, after } = scrubContext(words, wi, 40);
     ctxBefore.textContent = before;
     ctxAfter.textContent  = after;
   } else {
@@ -986,17 +966,6 @@ sizeSlider.addEventListener('input', () => {
   document.documentElement.style.setProperty('--word-size', v + 'rem');
 });
 
-// Context words toggle
-ctxToggle.addEventListener('change', () => {
-  showCtx = ctxToggle.checked;
-  document.getElementById('ctx-count-row').style.display = showCtx ? '' : 'none';
-  if (mode === 'flash') renderFlash();
-});
-ctxCountEl.addEventListener('input', () => {
-  ctxCount = parseInt(ctxCountEl.value, 10);
-  document.getElementById('ctx-count-val').textContent = ctxCount + ' words';
-  if (mode === 'flash') renderFlash();
-});
 
 // Group settings
 function onGroupChange() {
