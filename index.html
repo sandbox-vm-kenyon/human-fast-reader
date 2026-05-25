@@ -121,14 +121,17 @@
     }
     #page-nav {
       display: none;
-      justify-content: space-between;
-      align-items: center;
       margin: 6px 0;
-      gap: 8px;
+      gap: 0;
     }
     #page-nav.active { display: flex; }
-    #page-info { font-size: .8rem; color: var(--muted); text-align: center; flex: 1; }
-    #btn-prev-page, #btn-next-page { padding: 8px 18px; font-size: .9rem; }
+    #page-info { display: none; }
+    #btn-prev-page, #btn-next-page {
+      flex: 1; padding: 22px 0; font-size: 1.6rem; font-weight: 700;
+      border-radius: 0;
+    }
+    #btn-prev-page { border-radius: var(--radius) 0 0 var(--radius); }
+    #btn-next-page { border-radius: 0 var(--radius) var(--radius) 0; }
 
     /* ─────── Scrub bar ─────── */
     #scrub-wrap { margin: 10px 0 4px; position: relative; }
