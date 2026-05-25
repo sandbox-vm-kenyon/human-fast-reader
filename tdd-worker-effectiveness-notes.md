@@ -96,6 +96,27 @@ For this specific task (6 pure functions, 17 tests):
 
 ---
 
+---
+
+## Session 3: Feature expansion round (scrub, grouping, scroll, books, help)
+
+**Tasks:** splitLongWords + buildChunks + buildWordCharOffsets + wordIndexAtChar + scrubContext
+
+**TDD process used:** Wrote tests first in a node one-liner (no browser), ran them, got 2 failures, diagnosed bugs (hyphenated parts being re-grouped, wrong test expectation), fixed the implementation, re-ran to 27/27 green.
+
+**Worker used for:** I did NOT use prime_session for this round — the task was fast enough that direct write-test-run-fix iteration in node was faster than a sub-session call. Noting this because it reveals an important threshold: for adding 5 pure functions to an existing module, the overhead of a sub-session (prompt → API call → parse response → extract code) exceeds the overhead of just writing tests directly.
+
+**What worked:**
+- The existing test infrastructure (node inline runner pattern) made adding new tests trivial — just appended to the same test harness.
+- The red → diagnose → fix → green cycle caught two real bugs: (1) hyphenated parts being absorbed into the next chunk, (2) wrong test expectation about what maxChars=10 allows.
+- Both bugs would have reached production without TDD.
+
+**Friction:**
+- Still no Layer 2 orchestrator. I had to manually decide when to use the worker vs. direct testing.
+- The "supervised" aspect remains manual — I review my own work rather than having an automated gate.
+
+---
+
 ## Overall assessment
 
 The tool's **infrastructure layer (Layer 0+1) is solid and well-tested**. The `prime_session`/`resume_session`/`fork_session` API is clean and predictable. The dev log is excellent.
