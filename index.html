@@ -65,7 +65,6 @@
       display: flex; flex-direction: row;
       align-items: center; justify-content: center;
       position: relative; overflow: hidden;
-      cursor: pointer; user-select: none;
       padding: 12px 0;
     }
     #ctx-before, #ctx-after {
@@ -445,6 +444,10 @@
     <input type="range" id="hyphen-thr" min="4" max="40" step="1" value="15">
     <span class="val" id="hyphen-val">15</span>
   </div>
+  <div class="toggle-row">
+    <input type="checkbox" id="split-hyphens" checked>
+    <label for="split-hyphens">Split hyphenated words above char limit</label>
+  </div>
 </div>
 
 <!-- ── Page settings ── -->
@@ -579,6 +582,7 @@ let timer  = null;
 let maxWords        = 1;
 let maxChars        = 12;
 let hyphenThreshold = 15;
+let splitHyphens    = true;
 
 // Context words
 let showCtx = false;
@@ -614,7 +618,8 @@ const maxWordsEl = document.getElementById('max-words');
 const maxCharsEl = document.getElementById('max-chars');
 const hyphenEl   = document.getElementById('hyphen-thr');
 
-const ctxToggle  = document.getElementById('ctx-toggle');
+const ctxToggle       = document.getElementById('ctx-toggle');
+const splitHyphensEl  = document.getElementById('split-hyphens');
 
 const pageSizeEl = document.getElementById('page-size');
 const bookSelect = document.getElementById('book-select');
@@ -681,32 +686,80 @@ async function fetchBook(key) {
 // ══════════════════════════════════════════════
 let chunkWordStart = []; // chunkWordStart[i] = index into words[] where chunk i begins
 
+// All Unicode hyphen/dash characters we treat as split points.
+// U+002D hyphen-minus, U+2010 hyphen, U+2011 non-breaking hyphen,
+// U+2012 figure dash, U+2013 en dash, U+2014 em dash,
+// U+2212 minus sign, U+00AD soft hyphen
+const HYPHEN_RE = /[\u002D\u2010\u2011\u2012\u2013\u2014\u2212\u00AD]/;
+
+// Split a word on every hyphen character, keeping the hyphen attached to the
+// leading segment (e.g. "multi-hyphenation-words" → ["multi-","hyphenation-","words"]).
+// Returns an array of one or more strings.
+function splitOnHyphens(word) {
+  const parts = [];
+  let rem = word;
+  let m;
+  while ((m = HYPHEN_RE.exec(rem)) !== null) {
+    parts.push(rem.slice(0, m.index + 1)); // include the hyphen char
+    rem = rem.slice(m.index + 1);
+  }
+  if (rem.length) parts.push(rem);
+  return parts.length > 1 ? parts : [word];
+}
+
 function rebuildChunks() {
   chunks = [];
   chunkWordStart = [];
   if (!words.length) return;
 
-  // We need to track which original word each chunk starts at.
-  // splitLongWords may expand words, so we track expansion carefully.
-  const expanded = [];       // { text, origIdx }
+  // Build expanded token list. Order of operations per word:
+  //   1. If splitHyphens enabled AND word contains a hyphen AND any segment
+  //      exceeds maxChars, split on hyphens first (segments keep trailing hyphen).
+  //   2. For each resulting segment, if it still exceeds hyphenThreshold,
+  //      apply the character-level hard-split (adding a synthetic '-').
+  const expanded = []; // { text, origIdx, endsWithHyphen }
+
   for (let i = 0; i < words.length; i++) {
     const w = words[i];
-    if (w.length <= hyphenThreshold) {
-      expanded.push({ text: w, origIdx: i });
-    } else {
-      let rem = w, offset = 0;
-      while (rem.length > hyphenThreshold) {
-        expanded.push({ text: rem.slice(0, hyphenThreshold - 1) + '-', origIdx: i });
-        rem = rem.slice(hyphenThreshold - 1);
+
+    // Step 1 — hyphen-split if enabled and word has a hyphen and is over maxChars
+    let segments = [w];
+    if (splitHyphens && HYPHEN_RE.test(w) && w.length > maxChars) {
+      segments = splitOnHyphens(w);
+    }
+
+    // Step 2 — for each segment, apply hard-split if over hyphenThreshold
+    for (const seg of segments) {
+      if (seg.length <= hyphenThreshold) {
+        expanded.push({ text: seg, origIdx: i });
+      } else {
+        // Hard-split: also check each sub-slice for embedded hyphens first
+        let rem = seg;
+        while (rem.length > hyphenThreshold) {
+          // Scan the slice we're about to cut for an embedded hyphen
+          const slice = rem.slice(0, hyphenThreshold);
+          const hIdx  = slice.search(HYPHEN_RE);
+          if (splitHyphens && hIdx > 0) {
+            // Split at the embedded hyphen (keep it attached)
+            expanded.push({ text: rem.slice(0, hIdx + 1), origIdx: i });
+            rem = rem.slice(hIdx + 1);
+          } else {
+            expanded.push({ text: rem.slice(0, hyphenThreshold - 1) + '-', origIdx: i });
+            rem = rem.slice(hyphenThreshold - 1);
+          }
+        }
+        if (rem.length) expanded.push({ text: rem, origIdx: i });
       }
-      if (rem.length) expanded.push({ text: rem, origIdx: i });
     }
   }
 
+  // Build chunks from expanded tokens, grouping non-hyphen-ending tokens up to
+  // maxWords / maxChars limits.
   let i = 0;
   while (i < expanded.length) {
     const token = expanded[i];
-    if (token.text.endsWith('-')) {
+    if (HYPHEN_RE.test(token.text.slice(-1)) || token.text.endsWith('-')) {
+      // Hyphen-ending token is always its own chunk
       chunks.push(token.text);
       chunkWordStart.push(token.origIdx);
       i++;
@@ -716,7 +769,7 @@ function rebuildChunks() {
     let count = 1;
     while (count < maxWords && i + count < expanded.length) {
       const next = expanded[i + count];
-      if (next.text.endsWith('-')) break;
+      if (HYPHEN_RE.test(next.text.slice(-1)) || next.text.endsWith('-')) break;
       const candidate = chunk + ' ' + next.text;
       if (candidate.length > maxChars) break;
       chunk = candidate;
@@ -1041,7 +1094,6 @@ document.getElementById('btn-back1').addEventListener('click',  () => stepBack(1
 document.getElementById('btn-fwd1').addEventListener('click',   () => stepForward(1));
 document.getElementById('btn-fwd10').addEventListener('click',  () => stepForward(10));
 document.getElementById('btn-last').addEventListener('click',   () => { if (mode==='flash') { pos=Math.max(0,chunks.length-1); render(); } });
-wordStage.addEventListener('click', togglePlay);
 
 // Mode buttons
 document.getElementById('mode-btns').addEventListener('click', e => {
@@ -1091,6 +1143,7 @@ function onGroupChange() {
   maxWords        = parseInt(maxWordsEl.value, 10);
   maxChars        = parseInt(maxCharsEl.value, 10);
   hyphenThreshold = parseInt(hyphenEl.value, 10);
+  splitHyphens    = splitHyphensEl.checked;
   document.getElementById('max-words-val').textContent = maxWords;
   document.getElementById('max-chars-val').textContent = maxChars;
   document.getElementById('hyphen-val').textContent    = hyphenThreshold;
@@ -1099,9 +1152,10 @@ function onGroupChange() {
   pageStarts = [0];
   render();
 }
-maxWordsEl.addEventListener('input', () => { clearProfile(); onGroupChange(); });
-maxCharsEl.addEventListener('input', () => { clearProfile(); onGroupChange(); });
-hyphenEl.addEventListener('input',   () => { clearProfile(); onGroupChange(); });
+maxWordsEl.addEventListener('input',    () => { clearProfile(); onGroupChange(); });
+maxCharsEl.addEventListener('input',    () => { clearProfile(); onGroupChange(); });
+hyphenEl.addEventListener('input',      () => { clearProfile(); onGroupChange(); });
+splitHyphensEl.addEventListener('change', () => { onGroupChange(); });
 
 // ── Profile presets ──
 const PROFILES = {
