@@ -221,7 +221,7 @@
       display: flex; align-items: center; justify-content: center;
     }
     #controls #btn-play:hover { background: var(--accent-hover); }
-    .play-pause-icon { display: block; color: #fff; overflow: visible; }
+    .play-pause-icon { display: block; color: #fff; overflow: visible; transform: translateZ(0); -webkit-transform: translateZ(0); will-change: transform; }
 
     /* ─────── Speed buttons ─────── */
     #speed-btns {
@@ -719,6 +719,7 @@ function animatePlayStop(toStop) {
     t = t < 0.5 ? 2*t*t : -1 + (4 - 2*t)*t; // ease in-out
     const p = from.map((v, i) => +(v + (to[i] - v) * t).toFixed(2));
     ppShape.setAttribute('d', `M ${p[0]},${p[1]} L ${p[2]},${p[3]} L ${p[4]},${p[5]} L ${p[6]},${p[7]} Z`);
+    void ppShape.getBBox(); // flush WebKit repaint (iOS SVG-in-button bug)
     if (t < 1) ppAnim = requestAnimationFrame(frame);
   }
   ppAnim = requestAnimationFrame(frame);
