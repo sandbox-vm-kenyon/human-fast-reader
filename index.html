@@ -366,22 +366,16 @@
 <div id="speed-btns">
   <button class="spd-btn" data-delta="-40">−40</button>
   <button class="spd-btn" data-delta="-20">−20</button>
-  <button class="spd-btn default-mark" data-set="300">5.0 Hz</button>
+  <button class="spd-btn default-mark" data-set="300">300 WPM</button>
   <button class="spd-btn" data-delta="+20">+20</button>
   <button class="spd-btn" data-delta="+40">+40</button>
 </div>
 
-<!-- ── Hz slider ── -->
+<!-- ── WPM slider ── -->
 <div class="slider-row">
-  <label for="wpm-slider">Hz</label>
+  <label for="wpm-slider">WPM</label>
   <input type="range" id="wpm-slider" min="50" max="1000" step="10" value="300">
-  <span class="val" id="wpm-val">5.0 Hz</span>
-</div>
-
-<!-- ── Avg WPM stat ── -->
-<div class="slider-row">
-  <label>Avg WPM</label>
-  <span id="avg-wpm" style="font-size:.85rem;color:var(--text)">—</span>
+  <span class="val" id="wpm-val">—</span>
 </div>
 
 <!-- ── Font size slider ── -->
@@ -511,7 +505,7 @@
 
     <h3>Settings</h3>
     <ul>
-      <li><strong>Hz</strong> — chunk display rate (chunks per second). Start around 3–4 Hz.</li>
+      <li><strong>WPM</strong> — calculated words per minute based on chunk rate and average words per chunk. Start around 200–250.</li>
       <li><strong>Size</strong> — fast display font size.</li>
       <li><strong>Max words / Max chars</strong> — group short words into one fast chunk (e.g. "and he was").</li>
       <li><strong>Hyphen at</strong> — split very long words with a hyphen across two chunks.</li>
@@ -522,7 +516,7 @@
 
     <h3>Tips</h3>
     <ul>
-      <li>Start at <strong>3–4 Hz</strong> and increase gradually per session.</li>
+      <li>Start at <strong>200–250 WPM</strong> and increase gradually per session.</li>
       <li>Use <strong>grouping</strong> (max words 2–3) to reduce cognitive load at higher speeds.</li>
       <li>Switch to <strong>Page mode</strong> mid-session to check comprehension or re-read.</li>
       <li>Comprehension drops sharply above 600 WPM for most people.</li>
@@ -835,22 +829,17 @@ function stepBack(n) {
   }
 }
 
-function hzLabel(v) { return (v / 60).toFixed(1) + ' Hz'; }
-
 function setWpm(v) {
   wpm = clampWpm(v);
   wpmSlider.value = wpm;
-  wpmValEl.textContent = hzLabel(wpm);
   updateAvgWpm();
   if (!paused && mode === 'flash') { clearTimeout(timer); scheduleFlash(); }
 }
 
 function updateAvgWpm() {
-  const avgWpmEl = document.getElementById('avg-wpm');
-  if (!avgWpmEl) return;
-  if (!chunks.length || !words.length) { avgWpmEl.textContent = '—'; return; }
+  if (!chunks.length || !words.length) { wpmValEl.textContent = '—'; return; }
   const wordsPerChunk = words.length / chunks.length;
-  avgWpmEl.textContent = Math.round(wordsPerChunk * wpm) + ' wpm';
+  wpmValEl.textContent = Math.round(wordsPerChunk * wpm);
 }
 
 // ── Page navigation ──
