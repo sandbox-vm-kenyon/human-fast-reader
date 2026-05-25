@@ -321,6 +321,7 @@
       font-family: monospace; color: #fff;
     }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.js"></script>
 </head>
 <body>
 
@@ -462,13 +463,27 @@
 </div>
 <div id="load-status"></div>
 
-<!-- ── Custom text ── -->
+<!-- ── Load file / URL / paste ── -->
 <div class="settings-block">
+  <div class="slider-row" style="margin-bottom:6px">
+    <label style="font-size:.8rem;color:var(--muted)">Load file</label>
+  </div>
+  <input type="file" id="file-picker" accept=".pdf,.txt,.md,.text,.csv,.rst,.org" style="display:none">
+  <button id="btn-file-pick" style="width:100%;margin-bottom:6px">📂 Choose file (.pdf, .txt, .md …)</button>
+
+  <div class="slider-row" style="margin-bottom:4px">
+    <label style="font-size:.8rem;color:var(--muted)">Load from URL</label>
+  </div>
+  <div style="display:flex;gap:6px;margin-bottom:6px">
+    <input type="url" id="url-input" placeholder="https://… (.pdf or text)" style="flex:1;background:var(--surface);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px 10px;font-size:.85rem;color:var(--text);font-family:inherit">
+    <button id="btn-load-url">Load</button>
+  </div>
+
   <div class="slider-row" style="margin-bottom:4px">
     <label style="font-size:.8rem;color:var(--muted)">Paste your own text</label>
   </div>
   <textarea id="custom-text" placeholder="Paste any text here…"></textarea>
-  <button id="btn-load-custom">Load custom text</button>
+  <button id="btn-load-custom">Load pasted text</button>
 </div>
 
 <!-- ── Help overlay ── -->
@@ -1074,10 +1089,69 @@ pageSizeEl.addEventListener('input', () => {
 // Books
 document.getElementById('btn-load-book').addEventListener('click', () => fetchBook(bookSelect.value));
 
-// Custom text
+// Custom text (paste)
 document.getElementById('btn-load-custom').addEventListener('click', () => {
   const txt = customText.value.trim();
   if (txt) loadText(txt, 'Custom text');
+});
+
+// ── File / URL / PDF loading ──
+async function extractTextFromPdf(arrayBuffer) {
+  if (!window.pdfjsLib) throw new Error('PDF.js not loaded');
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.js';
+  const pdf  = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  let text = '';
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page    = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map(item => item.str).join(' ') + '\n';
+  }
+  return text;
+}
+
+async function loadFromArrayBuffer(buf, name) {
+  if (name.toLowerCase().endsWith('.pdf')) {
+    loadStatus.textContent = 'Parsing PDF…';
+    try {
+      const text = await extractTextFromPdf(buf);
+      loadText(text, name);
+    } catch(e) {
+      loadStatus.textContent = 'PDF error: ' + e.message;
+    }
+  } else {
+    const text = new TextDecoder().decode(buf);
+    loadText(text, name);
+  }
+}
+
+// File picker
+document.getElementById('btn-file-pick').addEventListener('click', () => {
+  document.getElementById('file-picker').click();
+});
+document.getElementById('file-picker').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  loadStatus.textContent = 'Reading…';
+  const buf = await file.arrayBuffer();
+  await loadFromArrayBuffer(buf, file.name);
+  e.target.value = '';
+});
+
+// URL loader
+document.getElementById('btn-load-url').addEventListener('click', async () => {
+  const url = document.getElementById('url-input').value.trim();
+  if (!url) return;
+  loadStatus.textContent = 'Fetching…';
+  try {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error(r.status);
+    const buf = await r.arrayBuffer();
+    const name = url.split('/').pop().split('?')[0] || 'file';
+    await loadFromArrayBuffer(buf, name);
+  } catch(e) {
+    loadStatus.textContent = 'Fetch error: ' + e.message;
+  }
 });
 
 // Download
