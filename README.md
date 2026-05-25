@@ -4,9 +4,7 @@
 
 A mobile-first speed reading web app using RSVP (Rapid Serial Visual Presentation) — one word (or word group) at a time in a fixed spot so your eyes never move.
 
-| Dark / Speed mode | Light / Page mode |
-|---|---|
-| ![Dark Speed mode](screenshots/dark-speed-mode.png) | ![Light Page mode](screenshots/light-page-mode.png) |
+https://github.com/sandbox-vm-kenyon/rsvp-speed-reader/raw/main/screenshots/rsvp_reader.webm
 
 ---
 
@@ -92,3 +90,11 @@ You can also load any `.pdf`, `.txt`, `.md`, or other text file from your device
 | `←` | Back 10 chunks |
 | `→` | Forward 1 chunk / next page |
 | `↑` / `↓` | Speed +50 / −50 WPM |
+
+---
+
+## Screenshots
+
+| Dark / Speed mode | Light / Page mode |
+|---|---|
+| ![Dark Speed mode](screenshots/dark-speed-mode.png) | ![Light Page mode](screenshots/light-page-mode.png) |
