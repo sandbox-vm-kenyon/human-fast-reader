@@ -180,11 +180,12 @@
     button:active { transform: scale(.96); }
     button:hover  { background: rgba(255,255,255,.1); }
     #controls button { flex: 1; min-width: 0; }
-    #btn-play {
+    #controls #btn-play {
       background: var(--accent); border-color: var(--accent);
-      font-size: 1rem; padding: 10px 8px; flex: 2;
+      font-size: 1rem; padding: 10px 18px;
+      flex: 0 0 auto;
     }
-    #btn-play:hover { background: #c73652; }
+    #controls #btn-play:hover { background: #c73652; }
 
     /* ─────── Speed buttons ─────── */
     #speed-btns {
@@ -193,7 +194,7 @@
     }
     .spd-btn { flex: 1; min-width: 0; padding: 10px 4px; font-size: .9rem; font-weight: 600; color: var(--muted); border-color: rgba(255,255,255,.08); }
     .spd-btn:hover { color: var(--text); }
-    .spd-btn.default-mark { border-color: rgba(233,69,96,.4); color: rgba(233,69,96,.8); }
+    .spd-btn.default-mark { flex: 0 0 auto; padding: 10px 14px; border-color: rgba(233,69,96,.4); color: rgba(233,69,96,.8); }
 
     /* ─────── Slider rows ─────── */
     .slider-row {
