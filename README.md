@@ -4,7 +4,7 @@
 
 A mobile-first speed reading web app using RSVP (Rapid Serial Visual Presentation) — one word (or word group) at a time in a fixed spot so your eyes never move.
 
-https://github.com/sandbox-vm-kenyon/rsvp-speed-reader/raw/main/screenshots/rsvp_reader.webm
+<video src="https://github.com/sandbox-vm-kenyon/rsvp-speed-reader/raw/main/screenshots/rsvp_reader.webm" controls width="100%"></video>
 
 ---
 
