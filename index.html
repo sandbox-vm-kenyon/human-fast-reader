@@ -260,6 +260,13 @@
 
     /* ─────── Settings blocks ─────── */
     .settings-block { }
+    .group-ring {
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      margin: 6px 0;
+    }
+    :root.light .group-ring { border-color: rgba(0,0,0,.1); }
     details summary {
       cursor: pointer; font-size: .92rem; color: var(--muted);
       padding: 6px 0; list-style: none;
@@ -441,7 +448,7 @@
 <p class="slider-note">(wpm shown includes settings that group/split words)</p>
 
 <!-- ── Mode toggle ── -->
-<div id="mode-row">
+<div id="mode-row" class="group-ring">
   <div class="mode-section">
     <span class="mode-section-label">Reading Mode</span>
     <div id="mode-btns">
@@ -458,7 +465,8 @@
   </div>
 </div>
 
-<!-- ── Fast settings ── -->
+<!-- ── Advanced settings ── -->
+<div class="group-ring">
 <div class="settings-block" id="flash-settings">
 
   <!-- Profile presets -->
@@ -505,9 +513,11 @@
     <span class="val" id="page-size-val">200 w</span>
   </div>
 </div>
+</div><!-- /.group-ring advanced settings -->
 
 
 <!-- ── Books ── -->
+<div class="group-ring">
 <p class="section-header">Load text</p>
 <p class="slider-note">*Tip: use the page mode to quickly skip past title pages, table of contents, etc. The reading position will be aligned with the first word of the last page you were on once you start changing pages in page mode</p>
 <p class="section-header">Load included public domain book (loads at first word of book content)</p>
@@ -550,6 +560,7 @@
   <textarea id="custom-text" placeholder="Paste any text here…"></textarea>
   <button id="btn-load-custom">Load pasted text</button>
 </div>
+</div><!-- /.group-ring load -->
 
 <!-- ── Help overlay ── -->
 <div id="help-overlay">
