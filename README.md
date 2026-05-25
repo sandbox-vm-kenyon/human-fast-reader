@@ -2,7 +2,11 @@
 
 **Live site: https://sandbox-vm-kenyon.github.io/rsvp-speed-reader/**
 
-A mobile-first speed reading web app using RSVP (Rapid Serial Visual Presentation) — one word at a time in a fixed spot so your eyes never move.
+A mobile-first speed reading web app using RSVP (Rapid Serial Visual Presentation) — one word (or word group) at a time in a fixed spot so your eyes never move.
+
+| Dark / Speed mode | Light / Page mode |
+|---|---|
+| ![Dark Speed mode](screenshots/dark-speed-mode.png) | ![Light Page mode](screenshots/light-page-mode.png) |
 
 ---
 
@@ -20,11 +24,11 @@ Research shows trained readers can reach 600–1000 WPM with good comprehension 
 
 ## Modes
 
-### Fast mode
-One chunk at a time in a fixed spot. Leading and trailing words fill the stage on either side, giving peripheral context without breaking the RSVP effect. Tap the stage or press Space to play/pause.
+### Speed (RSVP) mode
+One chunk at a time in a fixed spot. Optionally show leading and trailing words for peripheral context without breaking the RSVP effect. Text is selectable.
 
 ### Page mode
-Shows a fixed window of words as traditional flowing text, with your current reading position highlighted. Switches bidirectionally with Fast mode — switching to Page jumps to the page containing your current position; switching back to Fast resumes from the highlighted word. Use this to find your place, re-read a passage, or compare traditional vs. RSVP reading.
+Shows flowing text with your current reading position highlighted and original line breaks, tabs, and spacing preserved. Switches bidirectionally with Speed mode — position stays in sync. Use Page mode to skip past title pages or a table of contents, then switch back to Speed to resume from that exact word.
 
 ---
 
@@ -32,20 +36,23 @@ Shows a fixed window of words as traditional flowing text, with your current rea
 
 | Setting | Description |
 |---|---|
-| **WPM** | Calculated words per minute (accounts for word grouping). Start around 200–250. |
-| **Size** | Font size of the fast display. |
-| **Simple / Advanced / Master** | Presets for word grouping (1w/10c, 3w/10c, 7w/20c). |
+| **Size** | RSVP display font size (0.5–5 rem). |
+| **WPM** | Chunk rate; displayed WPM accounts for word grouping and splitting. |
+| **Simple / Advanced / Master** | Presets: 1w/10c, 3w/10c, 7w/20c hyphen thresholds. |
 | **Max words / Max chars** | Group short words into one chunk (e.g. "and he was"). |
-| **Hyphen at** | Split very long words with a hyphen across two chunks. |
-| **Show leading & trailing words** | Toggle context words to the left and right of the current chunk. |
+| **Hyphen at** | Hard-split very long strings across chunks. |
+| **Split hyphenated words above char limit** | Splits naturally hyphenated words (e.g. "self-aware") at the hyphen before applying the hard-split rule. Supports all Unicode hyphen/dash characters. |
+| **Show leading & trailing words** | Context words either side of the current chunk. |
 | **Scrub bar** | Drag to jump anywhere; context preview appears while dragging. |
-| **Download text** | Save the currently loaded text as a .txt file. |
+| **Reading Mode** | Speed (RSVP) or Page. |
+| **Color Scheme** | Dark (black/orange) or Light (blue/white). |
+| **Download txt** | Save the currently loaded text as a .txt file. |
 
 ---
 
 ## Built-in books
 
-10 public domain classics pre-loaded (Project Gutenberg):
+10 public domain classics pre-loaded (Project Gutenberg). Each book opens automatically at the first word of actual content, skipping the Gutenberg preamble:
 
 - The Great Gatsby — F. Scott Fitzgerald *(default)*
 - Pride & Prejudice — Jane Austen
@@ -58,13 +65,30 @@ Shows a fixed window of words as traditional flowing text, with your current rea
 - Adventures of Sherlock Holmes — Arthur Conan Doyle
 - The War of the Worlds — H.G. Wells
 
+You can also load any `.pdf`, `.txt`, `.md`, or other text file from your device, from a URL, or paste text directly.
+
+---
+
+## Playback controls
+
+| Button | Action |
+|---|---|
+| `\|< 1st` | Jump to first chunk |
+| `<< 10` | Back 10 chunks |
+| `< 1` | Back 1 chunk |
+| `▶ Play` | Play / pause |
+| `1 >` | Forward 1 chunk |
+| `10 >>` | Forward 10 chunks |
+| `last >\|` | Jump to last chunk |
+| `<<40` / `<10` / `300 WPM` / `10>` / `40>>` | Adjust speed |
+
 ---
 
 ## Keyboard shortcuts
 
 | Key | Action |
 |---|---|
-| `Space` | Play / pause (Fast mode) |
-| `←` | Back 10 words |
-| `→` | Forward 1 word / next page |
-| `↑` / `↓` | Speed +50 / −50 |
+| `Space` | Play / pause (Speed mode) |
+| `←` | Back 10 chunks |
+| `→` | Forward 1 chunk / next page |
+| `↑` / `↓` | Speed +50 / −50 WPM |

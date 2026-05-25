@@ -585,42 +585,53 @@
       <li><a href="https://pubmed.ncbi.nlm.nih.gov/30612265/" target="_blank" rel="noopener">Key-DeLyria et al. (2019) — RSVP Interacts with Ambiguity During Sentence Comprehension</a></li>
     </ul>
 
-    <h3>RSVP mode</h3>
-    <p>One chunk at a time in a fixed spot. Leading and trailing words fill the stage on either side, giving peripheral context without breaking the RSVP effect.</p>
+    <h3>Speed (RSVP) mode</h3>
+    <p>One chunk at a time in a fixed spot. Optionally show leading and trailing words for peripheral context without breaking the RSVP effect. Text is selectable.</p>
 
     <h3>Page mode</h3>
     <p>
-      Shows a fixed window of words as traditional flowing text, with your current reading position
-      highlighted. Switches bidirectionally with RSVP mode — switching to Page jumps to the page
-      containing your current RSVP position; switching back to RSVP resumes from the highlighted word.
-      Use this to find your place, re-read a passage, or compare traditional vs. RSVP reading directly.
+      Shows flowing text with your current reading position highlighted and original line breaks preserved.
+      Switches bidirectionally with Speed mode — position stays in sync. Use Page mode to skip past
+      title pages or a table of contents, then switch back to Speed to resume from that exact word.
     </p>
+
+    <h3>Reading Mode &amp; Color Scheme</h3>
+    <p><strong>Speed / Page</strong> — switch reading mode. <strong>Dark / Light</strong> — switch color theme (black/orange or blue/white).</p>
+
+    <h3>Playback controls</h3>
+    <p>|&lt; 1st &nbsp; &lt;&lt; 10 &nbsp; &lt; 1 &nbsp; ▶ Play &nbsp; 1 &gt; &nbsp; 10 &gt;&gt; &nbsp; last &gt;| — navigate by chunk, 10 chunks, or jump to start/end.</p>
+    <p>WPM buttons: &lt;&lt;40 &nbsp; &lt;10 &nbsp; 300 WPM &nbsp; 10&gt; &nbsp; 40&gt;&gt;</p>
 
     <h3>Settings</h3>
     <ul>
-      <li><strong>WPM</strong> — calculated words per minute based on chunk rate and average words per chunk. Start around 200–250.</li>
-      <li><strong>Size</strong> — fast display font size.</li>
-      <li><strong>Max words / Max chars</strong> — group short words into one fast chunk (e.g. "and he was").</li>
-      <li><strong>Hyphen at</strong> — split very long words with a hyphen across two chunks.</li>
-      <li><strong>Page size</strong> — words per page in Page mode.</li>
+      <li><strong>Size</strong> — RSVP display font size (0.5–5 rem).</li>
+      <li><strong>WPM</strong> — chunk rate; displayed WPM accounts for word grouping and splitting.</li>
+      <li><strong>Simple / Advanced / Master</strong> — presets: 1w/10c, 3w/10c, 7w/20c hyphen thresholds.</li>
+      <li><strong>Max words / Max chars</strong> — group short words into one chunk (e.g. "and he was").</li>
+      <li><strong>Hyphen at</strong> — hard-split very long strings across chunks.</li>
+      <li><strong>Split hyphenated words above char limit</strong> — splits naturally hyphenated words (e.g. "self-aware") at the hyphen before applying the hard-split rule. Supports all Unicode hyphen/dash characters.</li>
+      <li><strong>Show leading &amp; trailing words</strong> — context words either side of the current chunk.</li>
       <li><strong>Scrub bar</strong> — drag to jump anywhere; context preview appears while dragging.</li>
-      <li><strong>Download text</strong> — saves the currently loaded text as a .txt file.</li>
     </ul>
+
+    <h3>Built-in books</h3>
+    <p>10 public domain classics (Project Gutenberg), each loaded at the first word of actual book content, skipping the preamble automatically.</p>
+    <p>You can also load any .pdf, .txt, .md, or other text file from your device, from a URL, or paste text directly.</p>
 
     <h3>Tips</h3>
     <ul>
       <li>Start at <strong>200–250 WPM</strong> and increase gradually per session.</li>
-      <li>Use <strong>grouping</strong> (max words 2–3) to reduce cognitive load at higher speeds.</li>
-      <li>Switch to <strong>Page mode</strong> mid-session to check comprehension or re-read.</li>
+      <li>Use <strong>Page mode</strong> to skip past front matter, then switch back to Speed.</li>
+      <li>Use <strong>grouping</strong> (Simple/Advanced profiles) to reduce cognitive load at higher speeds.</li>
       <li>Comprehension drops sharply above 600 WPM for most people.</li>
     </ul>
 
     <h3>Keyboard shortcuts</h3>
     <ul>
-      <li><span class="kbd">Space</span> — play / pause (flash mode)</li>
-      <li><span class="kbd">←</span> — back 10 words</li>
-      <li><span class="kbd">→</span> — forward 1 word / next page</li>
-      <li><span class="kbd">↑</span> / <span class="kbd">↓</span> — speed +50 / −50 chunks/min</li>
+      <li><span class="kbd">Space</span> — play / pause (Speed mode)</li>
+      <li><span class="kbd">←</span> — back 10 chunks</li>
+      <li><span class="kbd">→</span> — forward 1 chunk / next page</li>
+      <li><span class="kbd">↑</span> / <span class="kbd">↓</span> — speed +50 / −50 WPM</li>
     </ul>
   </div>
 </div>
