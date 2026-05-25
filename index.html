@@ -595,7 +595,7 @@
 <!-- ── Font panel (full-screen overlay) ── -->
 <div id="font-panel" role="dialog" aria-modal="true" aria-label="Select font">
   <div id="font-panel-header">
-    <h2>Select Font</h2>
+    <h2>CHOOSE FONT</h2>
     <button id="font-panel-close" aria-label="Close">✕</button>
   </div>
   <p id="font-panel-instructions">Tap a font to apply it. Bold variants are shown separately.</p>
@@ -917,7 +917,7 @@ function buildFontPanel() {
 
   // System default
   const sys = document.createElement('div');
-  sys.className = 'font-item font-item-system' + (activeFont.family === 'inherit' ? ' selected' : '');
+  sys.className = 'font-item font-item-system' + (activeFontIdx === 0 ? ' selected' : '');
   sys.dataset.family = 'inherit'; sys.dataset.weight = '400';
   sys.textContent = 'System Default';
   sys.addEventListener('click', () => { applyFont('System Default', 'inherit', 400); closePanel(); });
@@ -932,7 +932,8 @@ function buildFontPanel() {
     group.fonts.forEach(font => {
       [400, 700].forEach(weight => {
         const el = document.createElement('div');
-        el.className = 'font-item' + (activeFont.family === font.family && activeFont.weight === weight ? ' selected' : '');
+        const flatIdx = FONT_FLAT.findIndex(f => f.family === font.family && f.weight === weight);
+        el.className = 'font-item' + (flatIdx === activeFontIdx ? ' selected' : '');
         el.dataset.family = font.family; el.dataset.weight = weight;
         el.style.fontFamily  = font.family;
         el.style.fontWeight  = weight;
