@@ -381,7 +381,7 @@
 <div class="slider-row">
   <label for="size-slider">Size</label>
   <button class="nudge-btn" id="size-dec">&lt;</button>
-  <input type="range" id="size-slider" min="1" max="5" step="0.25" value="1.5">
+  <input type="range" id="size-slider" min="0.5" max="5" step="0.25" value="1.5">
   <button class="nudge-btn" id="size-inc">&gt;</button>
   <span class="val" id="size-val">1.5rem</span>
 </div>
@@ -1141,7 +1141,7 @@ sizeSlider.addEventListener('input', () => {
 document.getElementById('wpm-dec').addEventListener('click', () => setWpm(wpm - 10));
 document.getElementById('wpm-inc').addEventListener('click', () => setWpm(wpm + 10));
 document.getElementById('size-dec').addEventListener('click', () => {
-  const v = Math.max(1, parseFloat(sizeSlider.value) - 0.25);
+  const v = Math.max(0.5, parseFloat(sizeSlider.value) - 0.25);
   sizeSlider.value = v; sizeValEl.textContent = v + 'rem';
   document.documentElement.style.setProperty('--word-size', v + 'rem');
 });
