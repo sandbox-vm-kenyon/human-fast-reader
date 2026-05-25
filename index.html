@@ -330,7 +330,7 @@
       font-family: monospace; color: #fff;
     }
   </style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.js" async></script>
 </head>
 <body>
 
@@ -370,13 +370,13 @@
 
 <!-- ── Playback controls ── -->
 <div id="controls">
-  <button id="btn-first">⇤</button>
+  <button id="btn-first">|&lt;</button>
   <button id="btn-back10">⟪</button>
   <button id="btn-back1">‹</button>
   <button id="btn-play">▶ Play</button>
   <button id="btn-fwd1">›</button>
   <button id="btn-fwd10">⟫</button>
-  <button id="btn-last">⇥</button>
+  <button id="btn-last">&gt;|</button>
 </div>
 
 <!-- ── Speed buttons ── -->
@@ -563,6 +563,7 @@
   </div>
 </div>
 
+<button id="btn-download">⬇ Download txt file of currently loaded text</button>
 <script src="js/core.js"></script>
 <script>
 // ══════════════════════════════════════════════
@@ -1254,6 +1255,5 @@ document.addEventListener('visibilitychange', () => { if (document.hidden && !pa
 // Fallback for desktop focus loss
 window.addEventListener('blur', () => { if (!paused) { stopAll(); render(); } });
 </script>
-<button id="btn-download">⬇ Download txt file of currently loaded text</button>
 </body>
 </html>
