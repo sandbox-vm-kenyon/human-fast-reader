@@ -1075,6 +1075,8 @@ document.getElementById('help-overlay').addEventListener('click', e => { if (e.t
 //  Init
 // ══════════════════════════════════════════════
 fetchBook('gatsby');
+
+window.addEventListener('blur', () => { if (!paused) stopAll(); render(); });
 </script>
 </body>
 </html>
