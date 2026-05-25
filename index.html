@@ -231,6 +231,21 @@
     details summary::before { content: '▶'; font-size: .65rem; }
     details[open] summary::before { content: '▼'; }
 
+    /* ─────── Profile buttons ─────── */
+    #profile-row {
+      display: flex; gap: 6px; margin: 6px 0 10px;
+    }
+    .profile-btn {
+      flex: 1; padding: 7px 4px; font-size: .78rem; font-weight: 600;
+      background: var(--surface); color: var(--muted);
+      border: 1px solid rgba(255,255,255,.12); border-radius: 8px;
+      cursor: pointer; transition: background .15s, color .15s, border-color .15s;
+    }
+    .profile-btn:hover { background: rgba(255,255,255,.08); color: var(--text); }
+    .profile-btn.active {
+      background: var(--accent); color: #fff; border-color: var(--accent);
+    }
+
     /* ─────── Toggle row ─────── */
     .toggle-row {
       display: flex; align-items: center; gap: 10px; margin: 4px 0;
@@ -380,37 +395,41 @@
 
 <!-- ── Flash settings ── -->
 <div class="settings-block" id="flash-settings">
-  <details>
-    <summary>Flash settings</summary>
 
-    <!-- Context words toggle -->
-    <div class="toggle-row">
-      <input type="checkbox" id="ctx-toggle">
-      <label for="ctx-toggle">Show leading &amp; trailing words</label>
-    </div>
-    <div class="slider-row" id="ctx-count-row" style="display:none">
-      <label for="ctx-count">Context</label>
-      <input type="range" id="ctx-count" min="1" max="8" step="1" value="3">
-      <span class="val" id="ctx-count-val">3 words</span>
-    </div>
+  <!-- Profile presets -->
+  <div id="profile-row">
+    <button class="profile-btn active" data-profile="simple">Simple</button>
+    <button class="profile-btn" data-profile="advanced">Advanced</button>
+    <button class="profile-btn" data-profile="master">Master</button>
+  </div>
 
-    <!-- Group settings -->
-    <div class="slider-row">
-      <label for="max-words">Max words</label>
-      <input type="range" id="max-words" min="1" max="7" step="1" value="1">
-      <span class="val" id="max-words-val">1</span>
-    </div>
-    <div class="slider-row">
-      <label for="max-chars">Max chars</label>
-      <input type="range" id="max-chars" min="1" max="50" step="1" value="12">
-      <span class="val" id="max-chars-val">12</span>
-    </div>
-    <div class="slider-row">
-      <label for="hyphen-thr">Hyphen at</label>
-      <input type="range" id="hyphen-thr" min="4" max="30" step="1" value="15">
-      <span class="val" id="hyphen-val">15</span>
-    </div>
-  </details>
+  <!-- Context words toggle -->
+  <div class="toggle-row">
+    <input type="checkbox" id="ctx-toggle">
+    <label for="ctx-toggle">Show leading &amp; trailing words</label>
+  </div>
+  <div class="slider-row" id="ctx-count-row" style="display:none">
+    <label for="ctx-count">Context</label>
+    <input type="range" id="ctx-count" min="1" max="8" step="1" value="3">
+    <span class="val" id="ctx-count-val">3 words</span>
+  </div>
+
+  <!-- Group settings -->
+  <div class="slider-row">
+    <label for="max-words">Max words</label>
+    <input type="range" id="max-words" min="1" max="7" step="1" value="1">
+    <span class="val" id="max-words-val">1</span>
+  </div>
+  <div class="slider-row">
+    <label for="max-chars">Max chars</label>
+    <input type="range" id="max-chars" min="1" max="50" step="1" value="12">
+    <span class="val" id="max-chars-val">12</span>
+  </div>
+  <div class="slider-row">
+    <label for="hyphen-thr">Hyphen at</label>
+    <input type="range" id="hyphen-thr" min="4" max="40" step="1" value="15">
+    <span class="val" id="hyphen-val">15</span>
+  </div>
 </div>
 
 <!-- ── Page settings ── -->
@@ -446,11 +465,13 @@
 <div id="load-status"></div>
 
 <!-- ── Custom text ── -->
-<details class="settings-block">
-  <summary>Paste your own text</summary>
+<div class="settings-block">
+  <div class="slider-row" style="margin-bottom:4px">
+    <label style="font-size:.8rem;color:var(--muted)">Paste your own text</label>
+  </div>
   <textarea id="custom-text" placeholder="Paste any text here…"></textarea>
   <button id="btn-load-custom">Load custom text</button>
-</details>
+</div>
 
 <!-- ── Help overlay ── -->
 <div id="help-overlay">
@@ -987,9 +1008,35 @@ function onGroupChange() {
   rebuildChunks();
   render();
 }
-maxWordsEl.addEventListener('input', onGroupChange);
-maxCharsEl.addEventListener('input', onGroupChange);
-hyphenEl.addEventListener('input',   onGroupChange);
+maxWordsEl.addEventListener('input', () => { clearProfile(); onGroupChange(); });
+maxCharsEl.addEventListener('input', () => { clearProfile(); onGroupChange(); });
+hyphenEl.addEventListener('input',   () => { clearProfile(); onGroupChange(); });
+
+// ── Profile presets ──
+const PROFILES = {
+  simple:   { maxWords: 1, maxChars: 12, hyphen: 15 },
+  advanced: { maxWords: 3, maxChars: 10, hyphen: 25 },
+  master:   { maxWords: 5, maxChars: 15, hyphen: 35 },
+};
+
+function clearProfile() {
+  document.querySelectorAll('.profile-btn').forEach(b => b.classList.remove('active'));
+}
+
+function applyProfile(name) {
+  const p = PROFILES[name];
+  if (!p) return;
+  maxWordsEl.value = p.maxWords;
+  maxCharsEl.value = p.maxChars;
+  hyphenEl.value   = p.hyphen;
+  clearProfile();
+  document.querySelector(`.profile-btn[data-profile="${name}"]`).classList.add('active');
+  onGroupChange();
+}
+
+document.querySelectorAll('.profile-btn').forEach(btn => {
+  btn.addEventListener('click', () => applyProfile(btn.dataset.profile));
+});
 
 // Page size
 pageSizeEl.addEventListener('input', () => {
