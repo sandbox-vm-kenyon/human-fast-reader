@@ -96,8 +96,6 @@
       overflow: hidden;
       /* line-height 1.75 × font ~1.1rem; show 18 complete lines */
       height: calc(18 * 1.75 * clamp(1rem, 3vw, 1.2rem) + 40px);
-      touch-action: none;
-      user-select: none;
       overscroll-behavior: none;
     }
     #page-stage.active { display: block; }
@@ -627,16 +625,16 @@ const customText = document.getElementById('custom-text');
 //  Text loading
 // ══════════════════════════════════════════════
 const BOOK_FILES = {
-  'gatsby':       'books/gatsby.txt',
-  'pride':        'books/pride.txt',
-  'alice':        'books/alice.txt',
-  'dorian':       'books/dorian.txt',
-  'frankenstein': 'books/frankenstein.txt',
-  'tom-sawyer':   'books/tom-sawyer.txt',
-  'dracula':      'books/dracula.txt',
-  'moby':         'books/moby.txt',
-  'sherlock':     'books/sherlock.txt',
-  'war':          'books/war.txt',
+  'gatsby':       'books/the-great-gatsby-f-scott-fitzgerald.txt',
+  'pride':        'books/pride-and-prejudice-jane-austen.txt',
+  'alice':        'books/alice-in-wonderland-lewis-carroll.txt',
+  'dorian':       'books/the-picture-of-dorian-gray-oscar-wilde.txt',
+  'frankenstein': 'books/frankenstein-mary-shelley.txt',
+  'tom-sawyer':   'books/the-adventures-of-tom-sawyer-mark-twain.txt',
+  'dracula':      'books/dracula-bram-stoker.txt',
+  'moby':         'books/moby-dick-herman-melville.txt',
+  'sherlock':     'books/the-adventures-of-sherlock-holmes-arthur-conan-doyle.txt',
+  'war':          'books/the-war-of-the-worlds-h-g-wells.txt',
 };
 
 let currentTextLabel = '';
@@ -1248,8 +1246,6 @@ document.getElementById('help-overlay').addEventListener('click', e => { if (e.t
 fetchBook('gatsby');
 
 
-// Prevent finger scroll within page stage without blocking page scroll
-pageStageEl.addEventListener('touchmove', e => { e.preventDefault(); }, { passive: false });
 // Stop playback when page is hidden (covers iOS app switching, tab switching, lock screen)
 document.addEventListener('visibilitychange', () => { if (document.hidden && !paused) { stopAll(); render(); } });
 // Fallback for desktop focus loss
