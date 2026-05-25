@@ -17,7 +17,7 @@
       --muted: #888;
       --word-bg: #0f3460;
       --radius: 12px;
-      --word-size: 2.5rem;
+      --word-size: 1.5rem;
       --max-w: 620px;
     }
 
@@ -62,11 +62,11 @@
       background: var(--word-bg);
       border-radius: var(--radius);
       min-height: 180px;
-      display: flex; flex-direction: column;
+      display: flex; flex-direction: row;
       align-items: center; justify-content: center;
       position: relative; overflow: hidden;
       cursor: pointer; user-select: none;
-      gap: 6px; padding: 12px 16px;
+      padding: 12px 0;
     }
     #word-stage::before {          /* pivot guide */
       content: ''; position: absolute; top: 0; bottom: 0; left: 50%;
@@ -74,20 +74,21 @@
       pointer-events: none;
     }
     #ctx-before, #ctx-after {
-      font-size: clamp(.7rem, 2vw, .9rem);
-      color: rgba(255,255,255,.35);
-      text-align: center;
-      font-weight: 400;
-      line-height: 1.4;
-      max-width: 100%;
-      min-height: 1.2em;
-      word-break: break-word;
+      font-size: var(--word-size);
+      color: rgba(255,255,255,.28);
+      font-weight: 700; letter-spacing: .02em;
+      white-space: nowrap;
+      flex: 1;
+      overflow: hidden;
     }
+    #ctx-before { text-align: right; padding-right: .5em; }
+    #ctx-after  { text-align: left;  padding-left:  .5em; }
     #word-display {
       font-size: var(--word-size);
       font-weight: 700; letter-spacing: .02em; color: #fff;
       text-align: center; padding: 2px 8px;
-      word-break: break-word;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
     /* ─────── Page stage ─────── */
@@ -328,7 +329,7 @@
   <button id="btn-help" title="Help &amp; Science">?</button>
 </header>
 
-<!-- ── Flash stage ── -->
+<!-- ── Fast stage ── -->
 <div id="word-stage">
   <div id="ctx-before"></div>
   <div id="word-display">TAP PLAY</div>
@@ -380,8 +381,8 @@
 <!-- ── Font size slider ── -->
 <div class="slider-row">
   <label for="size-slider">Size</label>
-  <input type="range" id="size-slider" min="1" max="5" step="0.25" value="2.5">
-  <span class="val" id="size-val">2.5rem</span>
+  <input type="range" id="size-slider" min="1" max="5" step="0.25" value="1.5">
+  <span class="val" id="size-val">1.5rem</span>
 </div>
 
 <!-- ── Mode toggle ── -->
