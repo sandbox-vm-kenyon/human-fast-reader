@@ -404,6 +404,12 @@
     <button class="profile-btn" data-profile="master">Master</button>
   </div>
 
+  <!-- Context words toggle -->
+  <div class="toggle-row">
+    <input type="checkbox" id="ctx-toggle">
+    <label for="ctx-toggle">Show leading &amp; trailing words</label>
+  </div>
+
   <!-- Group settings -->
   <div class="slider-row">
     <label for="max-words">Max words</label>
@@ -544,6 +550,9 @@ let maxWords        = 1;
 let maxChars        = 12;
 let hyphenThreshold = 15;
 
+// Context words
+let showCtx = false;
+
 // Page settings
 let pageSize    = 200; // words per page
 let pageWordPos = 0;   // word index of current position in page mode
@@ -573,6 +582,8 @@ const sizeValEl = document.getElementById('size-val');
 const maxWordsEl = document.getElementById('max-words');
 const maxCharsEl = document.getElementById('max-chars');
 const hyphenEl   = document.getElementById('hyphen-thr');
+
+const ctxToggle  = document.getElementById('ctx-toggle');
 
 const pageSizeEl = document.getElementById('page-size');
 const bookSelect = document.getElementById('book-select');
@@ -712,7 +723,7 @@ function renderFlash() {
   if (!chunks.length) { wordDisplay.textContent = 'Load text'; ctxBefore.textContent = ''; ctxAfter.textContent = ''; return; }
   wordDisplay.textContent = chunks[pos] || '—';
 
-  if (words.length) {
+  if (showCtx && words.length) {
     const wi = chunkToWord(pos);
     const { before, after } = scrubContext(words, wi, 40);
     ctxBefore.textContent = before;
@@ -1006,6 +1017,12 @@ function applyProfile(name) {
 
 document.querySelectorAll('.profile-btn').forEach(btn => {
   btn.addEventListener('click', () => applyProfile(btn.dataset.profile));
+});
+
+// Context words toggle
+ctxToggle.addEventListener('change', () => {
+  showCtx = ctxToggle.checked;
+  if (mode === 'flash') renderFlash();
 });
 
 // Page size
