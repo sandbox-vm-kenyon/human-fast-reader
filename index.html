@@ -366,16 +366,22 @@
 <div id="speed-btns">
   <button class="spd-btn" data-delta="-40">−40</button>
   <button class="spd-btn" data-delta="-20">−20</button>
-  <button class="spd-btn default-mark" data-set="300">300 WPM</button>
+  <button class="spd-btn default-mark" data-set="300">5.0 Hz</button>
   <button class="spd-btn" data-delta="+20">+20</button>
   <button class="spd-btn" data-delta="+40">+40</button>
 </div>
 
-<!-- ── WPM slider ── -->
+<!-- ── Hz slider ── -->
 <div class="slider-row">
-  <label for="wpm-slider">WPM</label>
+  <label for="wpm-slider">Hz</label>
   <input type="range" id="wpm-slider" min="50" max="1000" step="10" value="300">
-  <span class="val" id="wpm-val">300</span>
+  <span class="val" id="wpm-val">5.0 Hz</span>
+</div>
+
+<!-- ── Avg WPM stat ── -->
+<div class="slider-row">
+  <label>Avg WPM</label>
+  <span id="avg-wpm" style="font-size:.85rem;color:var(--text)">—</span>
 </div>
 
 <!-- ── Font size slider ── -->
@@ -505,7 +511,7 @@
 
     <h3>Settings</h3>
     <ul>
-      <li><strong>WPM</strong> — words per minute. Start at 200–250, work up gradually.</li>
+      <li><strong>Hz</strong> — chunk display rate (chunks per second). Start around 3–4 Hz.</li>
       <li><strong>Size</strong> — fast display font size.</li>
       <li><strong>Max words / Max chars</strong> — group short words into one fast chunk (e.g. "and he was").</li>
       <li><strong>Hyphen at</strong> — split very long words with a hyphen across two chunks.</li>
@@ -516,7 +522,7 @@
 
     <h3>Tips</h3>
     <ul>
-      <li>Start at <strong>200 WPM</strong> and increase by 20–50 WPM per session.</li>
+      <li>Start at <strong>3–4 Hz</strong> and increase gradually per session.</li>
       <li>Use <strong>grouping</strong> (max words 2–3) to reduce cognitive load at higher speeds.</li>
       <li>Switch to <strong>Page mode</strong> mid-session to check comprehension or re-read.</li>
       <li>Comprehension drops sharply above 600 WPM for most people.</li>
@@ -527,7 +533,7 @@
       <li><span class="kbd">Space</span> — play / pause (flash mode)</li>
       <li><span class="kbd">←</span> — back 10 words</li>
       <li><span class="kbd">→</span> — forward 1 word / next page</li>
-      <li><span class="kbd">↑</span> / <span class="kbd">↓</span> — WPM +50 / −50</li>
+      <li><span class="kbd">↑</span> / <span class="kbd">↓</span> — speed +50 / −50 chunks/min</li>
     </ul>
   </div>
 </div>
@@ -613,6 +619,7 @@ function loadText(text, label) {
   words  = parseWords(text);
   currentTextLabel = label || 'text';
   rebuildChunks();
+  updateAvgWpm();
   pos         = 0;
   pageWordPos = 0;
   paused      = true;
@@ -828,11 +835,22 @@ function stepBack(n) {
   }
 }
 
+function hzLabel(v) { return (v / 60).toFixed(1) + ' Hz'; }
+
 function setWpm(v) {
   wpm = clampWpm(v);
   wpmSlider.value = wpm;
-  wpmValEl.textContent = wpm;
+  wpmValEl.textContent = hzLabel(wpm);
+  updateAvgWpm();
   if (!paused && mode === 'flash') { clearTimeout(timer); scheduleFlash(); }
+}
+
+function updateAvgWpm() {
+  const avgWpmEl = document.getElementById('avg-wpm');
+  if (!avgWpmEl) return;
+  if (!chunks.length || !words.length) { avgWpmEl.textContent = '—'; return; }
+  const wordsPerChunk = words.length / chunks.length;
+  avgWpmEl.textContent = Math.round(wordsPerChunk * wpm) + ' wpm';
 }
 
 // ── Page navigation ──
@@ -987,6 +1005,7 @@ function onGroupChange() {
   document.getElementById('max-chars-val').textContent = maxChars;
   document.getElementById('hyphen-val').textContent    = hyphenThreshold;
   rebuildChunks();
+  updateAvgWpm();
   render();
 }
 maxWordsEl.addEventListener('input', () => { clearProfile(); onGroupChange(); });
@@ -995,9 +1014,9 @@ hyphenEl.addEventListener('input',   () => { clearProfile(); onGroupChange(); })
 
 // ── Profile presets ──
 const PROFILES = {
-  simple:   { maxWords: 1, maxChars: 12, hyphen: 15 },
+  simple:   { maxWords: 1, maxChars: 10, hyphen: 20 },
   advanced: { maxWords: 3, maxChars: 10, hyphen: 25 },
-  master:   { maxWords: 5, maxChars: 15, hyphen: 35 },
+  master:   { maxWords: 7, maxChars: 20, hyphen: 40 },
 };
 
 function clearProfile() {
