@@ -1,6 +1,6 @@
-# Fast Reader
+# Speed Reader (RSVP)
 
-**Live site: https://sandbox-vm-kenyon.github.io/human-fast-reader/**
+**Live site: https://sandbox-vm-kenyon.github.io/rsvp-speed-reader/**
 
 A mobile-first speed reading web app using RSVP (Rapid Serial Visual Presentation) — one word at a time in a fixed spot so your eyes never move.
 

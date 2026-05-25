@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>Fast Reader</title>
+  <title>Speed Reader</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -67,11 +67,6 @@
       position: relative; overflow: hidden;
       cursor: pointer; user-select: none;
       padding: 12px 0;
-    }
-    #word-stage::before {          /* pivot guide */
-      content: ''; position: absolute; top: 0; bottom: 0; left: 50%;
-      width: 2px; background: rgba(233,69,96,.15); transform: translateX(-50%);
-      pointer-events: none;
     }
     #ctx-before, #ctx-after {
       font-size: var(--word-size);
@@ -331,7 +326,7 @@
 
 <!-- ── Header ── -->
 <header>
-  <h1>⚡ Fast Reader</h1>
+  <h1>⚡ Speed Reader</h1>
   <span id="stats">0 / 0</span>
   <button id="btn-help" title="Help &amp; Science">?</button>
 </header>
@@ -396,7 +391,7 @@
 <div id="mode-row">
   <label>Mode</label>
   <div id="mode-btns">
-    <button class="mode-btn active" data-mode="flash">Fast</button>
+    <button class="mode-btn active" data-mode="flash">RSVP</button>
     <button class="mode-btn" data-mode="page">Page</button>
   </div>
 </div>
@@ -499,14 +494,14 @@
       <li><a href="https://pubmed.ncbi.nlm.nih.gov/30612265/" target="_blank" rel="noopener">Key-DeLyria et al. (2019) — RSVP Interacts with Ambiguity During Sentence Comprehension</a></li>
     </ul>
 
-    <h3>Fast mode</h3>
+    <h3>RSVP mode</h3>
     <p>One chunk at a time in a fixed spot. Leading and trailing words fill the stage on either side, giving peripheral context without breaking the RSVP effect.</p>
 
     <h3>Page mode</h3>
     <p>
       Shows a fixed window of words as traditional flowing text, with your current reading position
-      highlighted. Switches bidirectionally with Fast mode — switching to Page jumps to the page
-      containing your current Fast position; switching back to Fast resumes from the highlighted word.
+      highlighted. Switches bidirectionally with RSVP mode — switching to Page jumps to the page
+      containing your current RSVP position; switching back to RSVP resumes from the highlighted word.
       Use this to find your place, re-read a passage, or compare traditional vs. RSVP reading directly.
     </p>
 
