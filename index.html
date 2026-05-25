@@ -373,7 +373,7 @@
       font-family: monospace; color: #fff;
     }
   </style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.js" async></script>
+  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 </head>
 <body>
 
@@ -1382,7 +1382,7 @@ document.getElementById('btn-load-custom').addEventListener('click', () => {
 async function extractTextFromPdf(arrayBuffer) {
   if (!window.pdfjsLib) throw new Error('PDF.js not loaded');
   pdfjsLib.GlobalWorkerOptions.workerSrc =
-    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.js';
+    'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
   const pdf  = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
   let text = '';
   for (let i = 1; i <= pdf.numPages; i++) {
