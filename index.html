@@ -430,11 +430,16 @@
 <!-- ── Books ── -->
 <div id="books-row">
   <select id="book-select">
+    <option value="gatsby">The Great Gatsby — F. Scott Fitzgerald</option>
     <option value="pride">Pride &amp; Prejudice — Jane Austen</option>
     <option value="alice">Alice's Adventures in Wonderland — Lewis Carroll</option>
     <option value="dorian">The Picture of Dorian Gray — Oscar Wilde</option>
     <option value="frankenstein">Frankenstein — Mary Shelley</option>
     <option value="tom-sawyer">The Adventures of Tom Sawyer — Mark Twain</option>
+    <option value="dracula">Dracula — Bram Stoker</option>
+    <option value="moby">Moby-Dick — Herman Melville</option>
+    <option value="sherlock">Adventures of Sherlock Holmes — Arthur Conan Doyle</option>
+    <option value="war">The War of the Worlds — H.G. Wells</option>
   </select>
   <button id="btn-load-book">Load</button>
 </div>
@@ -576,11 +581,16 @@ const customText = document.getElementById('custom-text');
 //  Text loading
 // ══════════════════════════════════════════════
 const BOOK_FILES = {
+  'gatsby':       'books/gatsby.txt',
   'pride':        'books/pride.txt',
   'alice':        'books/alice.txt',
   'dorian':       'books/dorian.txt',
   'frankenstein': 'books/frankenstein.txt',
   'tom-sawyer':   'books/tom-sawyer.txt',
+  'dracula':      'books/dracula.txt',
+  'moby':         'books/moby.txt',
+  'sherlock':     'books/sherlock.txt',
+  'war':          'books/war.txt',
 };
 
 let currentTextLabel = '';
@@ -1030,7 +1040,7 @@ document.getElementById('help-overlay').addEventListener('click', e => { if (e.t
 // ══════════════════════════════════════════════
 //  Init
 // ══════════════════════════════════════════════
-fetchBook('pride');
+fetchBook('gatsby');
 </script>
 </body>
 </html>
