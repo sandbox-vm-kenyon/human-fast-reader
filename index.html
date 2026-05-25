@@ -788,16 +788,23 @@ function renderPage() {
   }
   pageStageEl.innerHTML = html;
 
-  // Trim spans that overflow the container bottom
+  // Measure all spans BEFORE any DOM removal — removing spans causes reflow which
+  // shifts remaining spans up, making them appear to fit when they shouldn't.
   const containerBottom = pageStageEl.getBoundingClientRect().bottom;
   const spans = Array.from(pageStageEl.querySelectorAll('span[data-wi]'));
   let lastVisibleWi = start;
-  for (const sp of spans) {
-    if (sp.getBoundingClientRect().bottom <= containerBottom + 2) {
-      lastVisibleWi = parseInt(sp.dataset.wi, 10);
+  let firstOverflowIdx = -1;
+  for (let i = 0; i < spans.length; i++) {
+    if (spans[i].getBoundingClientRect().bottom <= containerBottom + 2) {
+      lastVisibleWi = parseInt(spans[i].dataset.wi, 10);
     } else {
-      sp.remove();
+      firstOverflowIdx = i;
+      break;
     }
+  }
+  // Bulk-remove overflowing spans after all measurements are done
+  if (firstOverflowIdx !== -1) {
+    for (let i = firstOverflowIdx; i < spans.length; i++) spans[i].remove();
   }
 
   // Record next page start if not yet known
