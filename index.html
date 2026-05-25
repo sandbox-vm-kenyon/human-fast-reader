@@ -104,6 +104,8 @@
       /* line-height 1.75 × font ~1.1rem; show 18 complete lines */
       height: calc(18 * 1.75 * clamp(1rem, 3vw, 1.2rem));
       overscroll-behavior: none;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
     #page-stage.active { display: block; }
     #page-text {
@@ -585,6 +587,8 @@
 //  State
 // ══════════════════════════════════════════════
 let words  = [];
+let wordOffsets = []; // char offset of each word in rawText
+let rawText = '';     // original loaded text, used by page mode for whitespace fidelity
 let chunks = [];
 let pos    = 0;       // chunk index (flash) or word index (page)
 let paused = true;
@@ -660,7 +664,10 @@ let currentTextLabel = '';
 
 function loadText(text, label) {
   stopAll();
-  words  = parseWords(text);
+  rawText = text;
+  const parsed = parseWordsWithOffsets(text);
+  words       = parsed.words;
+  wordOffsets = parsed.offsets;
   currentTextLabel = label || 'text';
   rebuildChunks();
   updateAvgWpm();
@@ -868,15 +875,34 @@ function renderPage() {
   const start = pageStarts[pg];
   const curWI = pageWordPos;
 
-  // Render a large batch; we trim to what is actually visible
+  // Render a large batch; we trim to what is actually visible.
+  // If we have raw text with offsets, preserve original whitespace (line breaks, tabs, spacing).
+  // Otherwise fall back to space-joined rendering.
   const batchEnd = Math.min(start + 600, words.length);
   let html = '';
-  for (let i = start; i < batchEnd; i++) {
-    const w = escHtml(words[i]);
-    if (i === curWI) {
-      html += '<span class="cur-word" data-wi="' + i + '">' + w + '</span> ';
-    } else {
-      html += '<span data-wi="' + i + '">' + w + '</span> ';
+  if (rawText && wordOffsets.length === words.length) {
+    let charPos = wordOffsets[start];
+    for (let i = start; i < batchEnd; i++) {
+      // Whitespace/newlines between the previous word and this one
+      if (wordOffsets[i] > charPos) {
+        html += escHtml(rawText.slice(charPos, wordOffsets[i]));
+      }
+      const w = escHtml(words[i]);
+      if (i === curWI) {
+        html += '<span class="cur-word" data-wi="' + i + '">' + w + '</span>';
+      } else {
+        html += '<span data-wi="' + i + '">' + w + '</span>';
+      }
+      charPos = wordOffsets[i] + words[i].length;
+    }
+  } else {
+    for (let i = start; i < batchEnd; i++) {
+      const w = escHtml(words[i]);
+      if (i === curWI) {
+        html += '<span class="cur-word" data-wi="' + i + '">' + w + '</span> ';
+      } else {
+        html += '<span data-wi="' + i + '">' + w + '</span> ';
+      }
     }
   }
   pageStageEl.innerHTML = html;

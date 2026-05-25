@@ -8,6 +8,23 @@ function parseWords(text) {
   return text.split(/\s+/).filter(w => w.length > 0);
 }
 
+/**
+ * Split text into words AND record each word's character offset in the original text.
+ * Returns { words: string[], offsets: number[] } where offsets[i] is the index of
+ * words[i] in the original text string.
+ */
+function parseWordsWithOffsets(text) {
+  const words = [];
+  const offsets = [];
+  const re = /\S+/g;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    words.push(m[0]);
+    offsets.push(m.index);
+  }
+  return { words, offsets };
+}
+
 /** Clamp WPM to [50, 1000]. */
 function clampWpm(wpm) {
   return Math.max(50, Math.min(1000, wpm));
