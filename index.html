@@ -390,13 +390,13 @@
 
 <!-- ── Playback controls ── -->
 <div id="controls">
-  <button id="btn-first">|&lt;</button>
-  <button id="btn-back10">⟪</button>
-  <button id="btn-back1">‹</button>
+  <button id="btn-first">1st</button>
+  <button id="btn-back10">&lt;&lt;10</button>
+  <button id="btn-back1">&lt;1</button>
   <button id="btn-play">▶ Play</button>
-  <button id="btn-fwd1">›</button>
-  <button id="btn-fwd10">⟫</button>
-  <button id="btn-last">&gt;|</button>
+  <button id="btn-fwd1">1&gt;</button>
+  <button id="btn-fwd10">10&gt;&gt;</button>
+  <button id="btn-last">last&gt;|</button>
 </div>
 
 <!-- ── Speed buttons ── -->
@@ -479,6 +479,7 @@
 <!-- ── Books ── -->
 <p class="section-header">Load text</p>
 <p class="slider-note">*Tip: use the page mode to quickly skip past title pages, table of contents, etc. The reading position will be aligned with the first word of the last page you were on once you start changing pages in page mode</p>
+<p class="section-header">Load included public domain book (loads at first word of book content)</p>
 <div id="books-row">
   <select id="book-select">
     <option value="gatsby">The Great Gatsby — F. Scott Fitzgerald</option>
@@ -668,12 +669,12 @@ const BOOK_START_CHUNK = {
   'pride':        5158,
   'alice':        230,
   'dorian':       582,
-  'frankenstein': 0,
-  'tom-sawyer':   0,
-  'dracula':      0,
-  'moby':         0,
-  'sherlock':     0,
-  'war':          0,
+  'frankenstein': 226,
+  'tom-sawyer':   1171,
+  'dracula':      407,
+  'moby':         4532,
+  'sherlock':     236,
+  'war':          339,
 };
 
 let currentTextLabel = '';
