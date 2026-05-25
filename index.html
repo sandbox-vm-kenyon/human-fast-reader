@@ -212,6 +212,7 @@
     }
     .slider-row .val { font-size: .85rem; font-weight: 600; min-width: 52px; text-align: right; }
     .nudge-btn { padding: 6px 10px; font-size: .85rem; font-weight: 700; flex-shrink: 0; }
+    .slider-note { font-size: .72rem; color: var(--muted); margin: 2px 0 6px; line-height: 1.4; }
 
     /* ─────── Mode row ─────── */
     #mode-row {
@@ -366,6 +367,15 @@
   <div id="scrub-context"></div>
 </div>
 
+<!-- ── Font size slider ── -->
+<div class="slider-row">
+  <label for="size-slider">Size</label>
+  <button class="nudge-btn" id="size-dec">&lt;</button>
+  <input type="range" id="size-slider" min="1" max="5" step="0.25" value="1.5">
+  <button class="nudge-btn" id="size-inc">&gt;</button>
+  <span class="val" id="size-val">1.5rem</span>
+</div>
+
 <!-- ── Playback controls ── -->
 <div id="controls">
   <button id="btn-first">|&lt;</button>
@@ -394,15 +404,7 @@
   <button class="nudge-btn" id="wpm-inc">&gt;</button>
   <span class="val" id="wpm-val">—</span>
 </div>
-
-<!-- ── Font size slider ── -->
-<div class="slider-row">
-  <label for="size-slider">Size</label>
-  <button class="nudge-btn" id="size-dec">&lt;</button>
-  <input type="range" id="size-slider" min="1" max="5" step="0.25" value="1.5">
-  <button class="nudge-btn" id="size-inc">&gt;</button>
-  <span class="val" id="size-val">1.5rem</span>
-</div>
+<p class="slider-note">(wpm shown is based on current settings affecting loaded text and factors in words that may be hyphenated or grouped)</p>
 
 <!-- ── Mode toggle ── -->
 <div id="mode-row">
