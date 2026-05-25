@@ -15,6 +15,9 @@
       --accent: #f97316;
       --accent-hover: #ea6c0a;
       --text: #f0f0f0;
+      --reader-font: inherit;
+      --reader-weight-normal: 400;
+      --reader-weight-bold: 700;
       --muted: #888;
       --word-bg: #000000;
       --radius: 12px;
@@ -97,6 +100,7 @@
     }
     #ctx-before, #ctx-after {
       font-size: var(--word-size);
+      font-family: var(--reader-font);
       color: var(--text);
       font-weight: 700; letter-spacing: .02em;
       white-space: nowrap;
@@ -107,6 +111,7 @@
     #ctx-after  { text-align: left;  padding-left:  .4em; }
     #word-display {
       font-size: var(--word-size);
+      font-family: var(--reader-font);
       font-weight: 700; letter-spacing: .02em; color: var(--text);
       text-align: center; padding: 2px 0;
       white-space: nowrap;
@@ -130,6 +135,7 @@
     #page-stage.active { display: block; }
     #page-text {
       font-size: clamp(1rem, 3vw, 1.2rem);
+      font-family: var(--reader-font);
       line-height: 1.75;
       color: color-mix(in srgb, var(--text) 70%, transparent);
       word-spacing: .12em;
@@ -264,6 +270,20 @@
     #mode-btns, #theme-btns { display: flex; gap: 5px; flex-wrap: nowrap; }
     .mode-btn { padding: 7px 10px; font-size: .93rem; border-radius: 20px; white-space: nowrap; flex: 1; }
     .mode-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    /* ─────── Font row ─────── */
+    #font-row { display: flex; gap: 12px; margin: 6px 0; align-items: flex-start; flex-wrap: nowrap; }
+    #font-row .mode-section { flex: 1; min-width: 0; }
+    #font-row .mode-section.bold-section { flex: 0 0 auto; }
+    #font-select {
+      width: 100%; background: var(--surface); color: var(--text);
+      border: 1px solid rgba(255,255,255,.1); border-radius: 8px;
+      padding: 7px 10px; font-size: .93rem; cursor: pointer;
+      appearance: none; -webkit-appearance: none;
+    }
+    :root.light #font-select { border-color: rgba(0,0,0,.12); }
+    #bold-check-label { display: flex; align-items: center; gap: 8px; padding: 7px 10px; font-size: .93rem; cursor: pointer; color: var(--text); white-space: nowrap; }
+    #bold-check { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
 
     /* ─────── Settings blocks ─────── */
     .settings-block { }
@@ -479,6 +499,45 @@
         <button class="mode-btn theme-btn active-theme" data-theme="dark">Dark</button>
         <button class="mode-btn theme-btn" data-theme="light">Light</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Font + Bold ── -->
+<div id="font-row">
+  <div class="mode-section">
+    <span class="mode-section-label">Font</span>
+    <div class="group-ring" style="margin:0">
+      <select id="font-select">
+        <option value="">System Default</option>
+        <optgroup label="Sans-serif">
+          <option value="Arial, sans-serif">Arial</option>
+          <option value="Helvetica, Arial, sans-serif">Helvetica</option>
+          <option value="Verdana, sans-serif">Verdana</option>
+          <option value="Trebuchet MS, sans-serif">Trebuchet MS</option>
+          <option value="Optima, Candara, sans-serif">Optima</option>
+          <option value="Futura, Century Gothic, sans-serif">Futura</option>
+        </optgroup>
+        <optgroup label="Serif">
+          <option value="Georgia, serif">Georgia</option>
+          <option value="Palatino, Palatino Linotype, serif">Palatino</option>
+          <option value="'Times New Roman', Times, serif">Times New Roman</option>
+          <option value="Didot, 'Bodoni MT', serif">Didot</option>
+          <option value="Baskerville, 'Baskerville Old Face', serif">Baskerville</option>
+        </optgroup>
+        <optgroup label="Monospace">
+          <option value="'Courier New', Courier, monospace">Courier New</option>
+          <option value="Menlo, Monaco, monospace">Menlo / Monaco</option>
+        </optgroup>
+      </select>
+    </div>
+  </div>
+  <div class="mode-section bold-section">
+    <span class="mode-section-label">Style</span>
+    <div class="group-ring" style="margin:0">
+      <label id="bold-check-label">
+        <input type="checkbox" id="bold-check"> Bold
+      </label>
     </div>
   </div>
 </div>
@@ -728,6 +787,21 @@ const wpmSlider = document.getElementById('wpm-slider');
 const wpmValEl  = document.getElementById('wpm-val');
 const sizeSlider= document.getElementById('size-slider');
 const sizeValEl = document.getElementById('size-val');
+const fontSelect = document.getElementById('font-select');
+const boldCheck  = document.getElementById('bold-check');
+
+function applyFont() {
+  const f = fontSelect.value || 'inherit';
+  const w = boldCheck.checked ? '700' : '400';
+  document.documentElement.style.setProperty('--reader-font', f);
+  document.documentElement.style.setProperty('--reader-weight-normal', w);
+  // word-display and ctx are always 700 weight by design; bold adds weight on top
+  document.querySelector('#word-display').style.fontWeight = boldCheck.checked ? '900' : '700';
+  document.querySelectorAll('#ctx-before, #ctx-after').forEach(el => el.style.fontWeight = boldCheck.checked ? '900' : '700');
+  document.querySelector('#page-text').style.fontWeight = w;
+}
+fontSelect.addEventListener('change', applyFont);
+boldCheck.addEventListener('change', applyFont);
 
 const maxWordsEl = document.getElementById('max-words');
 const maxCharsEl = document.getElementById('max-chars');
