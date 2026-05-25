@@ -247,6 +247,9 @@
     .nudge-btn { padding: 6px 10px; font-size: .97rem; font-weight: 700; flex-shrink: 0; }
     .slider-note { font-size: .97rem; color: var(--muted); margin: 2px 0 6px; line-height: 1.4; }
     .section-header { font-size: .97rem; color: var(--muted); text-decoration: underline; margin: 4px 0 6px; line-height: 1.4; }
+    .section-header-plain { font-size: .97rem; color: var(--muted); margin: 0 0 6px; line-height: 1.4; }
+    .tip-panel { font-size: .85rem; color: var(--muted); opacity: .7; font-style: italic; margin: 4px 0 8px; line-height: 1.5; border: 1px solid rgba(255,255,255,.07); border-radius: 8px; padding: 8px 10px; }
+    :root.light .tip-panel { border-color: rgba(0,0,0,.08); }
 
     /* ─────── Mode row ─────── */
     #mode-row {
@@ -448,29 +451,32 @@
 <p class="slider-note">(wpm shown includes settings that group/split words)</p>
 
 <!-- ── Mode toggle ── -->
-<div id="mode-row" class="group-ring">
+<div id="mode-row">
   <div class="mode-section">
     <span class="mode-section-label">Reading Mode</span>
-    <div id="mode-btns">
-      <button class="mode-btn active" data-mode="flash">Speed</button>
-      <button class="mode-btn" data-mode="page">Page</button>
+    <div class="group-ring" style="margin:0">
+      <div id="mode-btns">
+        <button class="mode-btn active" data-mode="flash">Speed</button>
+        <button class="mode-btn" data-mode="page">Page</button>
+      </div>
     </div>
   </div>
   <div class="mode-section">
     <span class="mode-section-label">Color Scheme</span>
-    <div id="theme-btns">
-      <button class="mode-btn theme-btn active-theme" data-theme="dark">Dark</button>
-      <button class="mode-btn theme-btn" data-theme="light">Light</button>
+    <div class="group-ring" style="margin:0">
+      <div id="theme-btns">
+        <button class="mode-btn theme-btn active-theme" data-theme="dark">Dark</button>
+        <button class="mode-btn theme-btn" data-theme="light">Light</button>
+      </div>
     </div>
   </div>
 </div>
 
 <!-- ── Advanced settings ── -->
+<p class="section-header">Advanced setting profiles to control showing small groups of words</p>
 <div class="group-ring">
 <div class="settings-block" id="flash-settings">
 
-  <!-- Profile presets -->
-  <p class="section-header">Advanced setting profiles to control showing small groups of words</p>
   <div id="profile-row">
     <button class="profile-btn active" data-profile="simple">Simple</button>
     <button class="profile-btn" data-profile="advanced">Advanced</button>
@@ -517,10 +523,10 @@
 
 
 <!-- ── Books ── -->
-<div class="group-ring">
 <p class="section-header">Load text</p>
-<p class="slider-note">*Tip: use the page mode to quickly skip past title pages, table of contents, etc. The reading position will be aligned with the first word of the last page you were on once you start changing pages in page mode</p>
-<p class="section-header">Load included public domain book (loads at first word of book content)</p>
+<p class="tip-panel"><em>Tip: use the page mode to quickly skip past title pages, table of contents, etc. The reading position will be aligned with the first word of the last page you were on once you start changing pages in page mode</em></p>
+<div class="group-ring">
+<p class="section-header-plain">Load included public domain book (loads at first word of book content)</p>
 <div id="books-row">
   <select id="book-select">
     <option value="gatsby">The Great Gatsby — F. Scott Fitzgerald</option>
