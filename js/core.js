@@ -19,7 +19,8 @@ function parseWordsWithOffsets(text) {
   const re = /\S+/g;
   let m;
   while ((m = re.exec(text)) !== null) {
-    words.push(m[0]);
+    const w = /^(.)\1+$/.test(m[0]) ? m[0][0] : m[0];
+    words.push(w);
     offsets.push(m.index);
   }
   return { words, offsets };
