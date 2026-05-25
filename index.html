@@ -1388,7 +1388,16 @@ function setMode(m) {
 
   if (m === 'page') {
     // sync: flash pos → word pos for page mode
-    pageWordPos = words.length ? chunkToWord(pos) : 0;
+    const targetWi = words.length ? chunkToWord(pos) : 0;
+    pageWordPos = targetWi;
+    // pageStarts is built lazily; trim to known entries at or before targetWi,
+    // then inject targetWi so currentPage() lands here instead of page 0.
+    let insertAt = 0;
+    for (let i = 0; i < pageStarts.length; i++) {
+      if (pageStarts[i] <= targetWi) insertAt = i; else break;
+    }
+    pageStarts = pageStarts.slice(0, insertAt + 1);
+    if (pageStarts[insertAt] < targetWi) pageStarts.push(targetWi);
   } else if (m === 'flash') {
     // sync: page word pos → chunk pos for flash mode
     pos = words.length ? wordToChunk(pageWordPos) : 0;
