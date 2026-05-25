@@ -7,6 +7,8 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    html { overflow-x: hidden; }
+
     :root {
       --bg: #1a1a2e;
       --surface: #16213e;
@@ -16,6 +18,7 @@
       --word-bg: #0f3460;
       --radius: 12px;
       --word-size: 2.5rem;
+      --max-w: 620px;
     }
 
     body {
@@ -23,16 +26,21 @@
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
+      overflow-x: hidden;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 12px 16px 32px;
+      padding: 12px clamp(8px, 4vw, 16px) 32px;
+    }
+
+    /* All direct children constrained */
+    body > * {
+      width: 100%;
+      max-width: var(--max-w);
     }
 
     /* ─────── Header ─────── */
     header {
-      width: 100%;
-      max-width: 620px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -42,78 +50,84 @@
     #stats { font-size: .8rem; color: var(--muted); }
     #btn-help {
       background: none; border: 1px solid rgba(255,255,255,.2);
-      border-radius: 50%; width: 28px; height: 28px;
+      border-radius: 50%; width: 28px; height: 28px; flex-shrink: 0;
       font-size: .85rem; cursor: pointer; color: var(--muted);
       display: flex; align-items: center; justify-content: center;
-      transition: border-color .15s, color .15s; flex-shrink: 0;
+      transition: border-color .15s, color .15s;
     }
     #btn-help:hover { border-color: var(--accent); color: var(--accent); }
 
-    /* ─────── Word stage (flash) ─────── */
+    /* ─────── Flash stage ─────── */
     #word-stage {
-      width: 100%; max-width: 620px;
       background: var(--word-bg);
       border-radius: var(--radius);
-      min-height: 160px;
+      min-height: 180px;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
       position: relative; overflow: hidden;
-      cursor: pointer;
-      user-select: none;
+      cursor: pointer; user-select: none;
+      gap: 6px; padding: 12px 16px;
     }
-    /* pivot guide */
-    #word-stage::before {
+    #word-stage::before {          /* pivot guide */
       content: ''; position: absolute; top: 0; bottom: 0; left: 50%;
       width: 2px; background: rgba(233,69,96,.15); transform: translateX(-50%);
+      pointer-events: none;
+    }
+    #ctx-before, #ctx-after {
+      font-size: clamp(.7rem, 2vw, .9rem);
+      color: rgba(255,255,255,.35);
+      text-align: center;
+      font-weight: 400;
+      line-height: 1.4;
+      max-width: 100%;
+      min-height: 1.2em;
+      word-break: break-word;
     }
     #word-display {
       font-size: var(--word-size);
       font-weight: 700; letter-spacing: .02em; color: #fff;
-      text-align: center; padding: 8px 16px;
+      text-align: center; padding: 2px 8px;
+      word-break: break-word;
     }
 
-    /* ─────── Scroll stage ─────── */
-    #scroll-stage {
+    /* ─────── Page stage ─────── */
+    #page-stage {
       display: none;
-      width: 100%; max-width: 620px;
       background: var(--word-bg);
       border-radius: var(--radius);
-      min-height: 160px; overflow: hidden;
-      position: relative; cursor: pointer;
-      align-items: center; justify-content: center;
-    }
-    #scroll-stage.active { display: flex; }
-    #scroll-clip {
-      overflow: hidden;
-      white-space: nowrap;
-      /* width set by JS from char-window setting */
-      max-width: 100%;
+      min-height: 220px;
+      padding: 20px;
       position: relative;
-      font-family: 'Courier New', Courier, monospace;
-      font-size: var(--word-size);
-      font-weight: 600;
+      overflow-y: auto;
+      max-height: 55vh;
+    }
+    #page-stage.active { display: block; }
+    #page-text {
+      font-size: clamp(1rem, 3vw, 1.2rem);
+      line-height: 1.75;
+      color: rgba(255,255,255,.7);
+      word-spacing: .12em;
+    }
+    #page-text .cur-word {
       color: #fff;
-      padding: 0 4px;
+      background: rgba(233,69,96,.35);
+      border-radius: 3px;
+      padding: 0 2px;
+      font-weight: 700;
     }
-    #scroll-text {
-      display: inline-block;
-      white-space: nowrap;
-      will-change: transform;
+    #page-nav {
+      display: none;
+      justify-content: space-between;
+      align-items: center;
+      margin: 6px 0;
+      gap: 8px;
     }
-    /* cursor line in scroll mode */
-    #scroll-cursor {
-      position: absolute; top: 0; bottom: 0;
-      width: 3px; background: rgba(233,69,96,.7);
-      left: 50%; transform: translateX(-50%);
-      pointer-events: none;
-    }
+    #page-nav.active { display: flex; }
+    #page-info { font-size: .8rem; color: var(--muted); text-align: center; flex: 1; }
+    #btn-prev-page, #btn-next-page { padding: 8px 18px; font-size: .9rem; }
 
-    /* ─────── Progress / scrub bar ─────── */
-    #scrub-wrap {
-      width: 100%; max-width: 620px;
-      margin: 10px 0 4px;
-      position: relative;
-    }
+    /* ─────── Scrub bar ─────── */
+    #scrub-wrap { margin: 10px 0 4px; position: relative; }
     #scrub-bar {
       width: 100%; height: 28px;
       background: rgba(255,255,255,.08);
@@ -134,29 +148,23 @@
       font-size: .75rem; color: rgba(255,255,255,.5);
       pointer-events: none;
     }
-    /* context box shown while dragging */
     #scrub-context {
       display: none;
       background: var(--surface);
       border: 1px solid rgba(255,255,255,.1);
       border-radius: 8px;
       padding: 8px 12px;
-      font-size: .85rem;
-      line-height: 1.5;
-      margin-top: 6px;
-      color: var(--muted);
+      font-size: .85rem; line-height: 1.5;
+      margin-top: 6px; color: var(--muted);
     }
     #scrub-context .cur-word {
-      color: #fff;
-      font-weight: 700;
+      color: #fff; font-weight: 700;
       background: rgba(233,69,96,.25);
-      border-radius: 4px;
-      padding: 0 3px;
+      border-radius: 4px; padding: 0 3px;
     }
 
-    /* ─────── Controls ─────── */
+    /* ─────── Buttons ─────── */
     #controls {
-      width: 100%; max-width: 620px;
       display: flex; gap: 8px; margin: 6px 0;
       justify-content: center; flex-wrap: wrap;
     }
@@ -177,9 +185,8 @@
     }
     #btn-play:hover { background: #c73652; }
 
-    /* ─────── Speed controls ─────── */
+    /* ─────── Speed buttons ─────── */
     #speed-btns {
-      width: 100%; max-width: 620px;
       display: flex; gap: 6px; flex-wrap: wrap;
       justify-content: center; margin: 4px 0;
     }
@@ -189,39 +196,33 @@
 
     /* ─────── Slider rows ─────── */
     .slider-row {
-      width: 100%; max-width: 620px;
       display: flex; align-items: center; gap: 10px;
       margin: 4px 0;
     }
-    .slider-row label { font-size: .8rem; color: var(--muted); white-space: nowrap; min-width: 56px; }
+    .slider-row label { font-size: .8rem; color: var(--muted); white-space: nowrap; min-width: 72px; }
     .slider-row input[type=range] {
       flex: 1; -webkit-appearance: none;
       height: 4px; background: rgba(255,255,255,.15);
-      border-radius: 2px; outline: none;
+      border-radius: 2px; outline: none; min-width: 0;
     }
     .slider-row input[type=range]::-webkit-slider-thumb {
       -webkit-appearance: none; width: 20px; height: 20px;
       background: var(--accent); border-radius: 50%; cursor: pointer;
     }
-    .slider-row .val { font-size: .85rem; font-weight: 600; min-width: 60px; text-align: right; }
+    .slider-row .val { font-size: .85rem; font-weight: 600; min-width: 52px; text-align: right; }
 
-    /* ─────── Mode toggle ─────── */
+    /* ─────── Mode row ─────── */
     #mode-row {
-      width: 100%; max-width: 620px;
       display: flex; align-items: center; gap: 10px; margin: 4px 0;
+      flex-wrap: wrap;
     }
-    #mode-row label { font-size: .8rem; color: var(--muted); min-width: 56px; }
-    #mode-btns { display: flex; gap: 6px; }
-    .mode-btn {
-      padding: 7px 16px; font-size: .85rem;
-      border-radius: 20px;
-    }
+    #mode-row > label { font-size: .8rem; color: var(--muted); min-width: 72px; }
+    #mode-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+    .mode-btn { padding: 7px 16px; font-size: .85rem; border-radius: 20px; }
     .mode-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 
-    /* ─────── Settings panel ─────── */
-    .settings-block {
-      width: 100%; max-width: 620px;
-    }
+    /* ─────── Settings blocks ─────── */
+    .settings-block { }
     details summary {
       cursor: pointer; font-size: .8rem; color: var(--muted);
       padding: 6px 0; list-style: none;
@@ -230,23 +231,34 @@
     details summary::before { content: '▶'; font-size: .65rem; }
     details[open] summary::before { content: '▼'; }
 
-    /* ─────── Books section ─────── */
+    /* ─────── Toggle row ─────── */
+    .toggle-row {
+      display: flex; align-items: center; gap: 10px; margin: 4px 0;
+      flex-wrap: wrap;
+    }
+    .toggle-row label { font-size: .8rem; color: var(--muted); }
+    .toggle-row input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+
+    /* ─────── Books ─────── */
     #books-row {
-      width: 100%; max-width: 620px;
-      display: flex; gap: 8px; margin: 8px 0;
-      align-items: center;
+      display: flex; gap: 8px; margin: 8px 0; align-items: center;
     }
     #book-select {
       flex: 1; background: var(--surface); color: var(--text);
       border: 1px solid rgba(255,255,255,.1); border-radius: 8px;
-      padding: 9px 10px; font-size: .85rem; cursor: pointer;
-      appearance: none; -webkit-appearance: none;
+      padding: 9px 28px 9px 10px; font-size: .85rem; cursor: pointer;
+      appearance: none; -webkit-appearance: none; min-width: 0;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
       background-repeat: no-repeat; background-position: right 10px center;
-      padding-right: 28px;
     }
     #book-select option { background: #1a1a2e; }
     #load-status { font-size: .75rem; color: var(--muted); text-align: center; margin: 2px 0 6px; min-height: 1em; }
+
+    /* ─────── Toolbar row (download) ─────── */
+    #toolbar {
+      display: flex; gap: 8px; margin: 4px 0; flex-wrap: wrap;
+    }
+    #toolbar button { font-size: .8rem; padding: 7px 14px; }
 
     /* ─────── Custom text ─────── */
     #custom-text {
@@ -259,11 +271,11 @@
 
     /* ─────── Help overlay ─────── */
     #help-overlay {
-      display: none;
-      position: fixed; inset: 0; z-index: 100;
+      display: none; position: fixed; inset: 0; z-index: 100;
       background: rgba(0,0,0,.7);
       align-items: flex-start; justify-content: center;
-      padding: 20px 16px; overflow-y: auto;
+      padding: 20px clamp(8px,4vw,16px); overflow-y: auto;
+      max-width: 100vw;
     }
     #help-overlay.open { display: flex; }
     #help-panel {
@@ -301,17 +313,21 @@
   <button id="btn-help" title="Help &amp; Science">?</button>
 </header>
 
-<!-- ── Flash display ── -->
+<!-- ── Flash stage ── -->
 <div id="word-stage">
+  <div id="ctx-before"></div>
   <div id="word-display">TAP PLAY</div>
+  <div id="ctx-after"></div>
 </div>
 
-<!-- ── Scroll display ── -->
-<div id="scroll-stage">
-  <div id="scroll-clip">
-    <span id="scroll-text"></span>
-  </div>
-  <div id="scroll-cursor"></div>
+<!-- ── Page stage ── -->
+<div id="page-stage"></div>
+
+<!-- ── Page navigation ── -->
+<div id="page-nav">
+  <button id="btn-prev-page">← Prev</button>
+  <span id="page-info">Page 1</span>
+  <button id="btn-next-page">Next →</button>
 </div>
 
 <!-- ── Scrub bar ── -->
@@ -358,14 +374,27 @@
   <label>Mode</label>
   <div id="mode-btns">
     <button class="mode-btn active" data-mode="flash">Flash</button>
-    <button class="mode-btn" data-mode="scroll">Scroll</button>
+    <button class="mode-btn" data-mode="page">Page</button>
   </div>
 </div>
 
-<!-- ── Flash / group settings ── -->
+<!-- ── Flash settings ── -->
 <div class="settings-block" id="flash-settings">
   <details>
-    <summary>Group settings (flash mode)</summary>
+    <summary>Flash settings</summary>
+
+    <!-- Context words toggle -->
+    <div class="toggle-row">
+      <input type="checkbox" id="ctx-toggle">
+      <label for="ctx-toggle">Show leading &amp; trailing words</label>
+    </div>
+    <div class="slider-row" id="ctx-count-row" style="display:none">
+      <label for="ctx-count">Context</label>
+      <input type="range" id="ctx-count" min="1" max="8" step="1" value="3">
+      <span class="val" id="ctx-count-val">3 words</span>
+    </div>
+
+    <!-- Group settings -->
     <div class="slider-row">
       <label for="max-words">Max words</label>
       <input type="range" id="max-words" min="1" max="7" step="1" value="1">
@@ -384,13 +413,18 @@
   </details>
 </div>
 
-<!-- ── Scroll settings ── -->
-<div class="settings-block" id="scroll-settings" style="display:none">
+<!-- ── Page settings ── -->
+<div class="settings-block" id="page-settings" style="display:none">
   <div class="slider-row">
-    <label for="scroll-win">Window</label>
-    <input type="range" id="scroll-win" min="10" max="80" step="5" value="40">
-    <span class="val" id="scroll-win-val">40 ch</span>
+    <label for="page-size">Page size</label>
+    <input type="range" id="page-size" min="50" max="500" step="25" value="200">
+    <span class="val" id="page-size-val">200 w</span>
   </div>
+</div>
+
+<!-- ── Toolbar ── -->
+<div id="toolbar">
+  <button id="btn-download">⬇ Download text</button>
 </div>
 
 <!-- ── Books ── -->
@@ -436,37 +470,43 @@
       <li><a href="https://www.nature.com/articles/s41598-020-64997-1" target="_blank" rel="noopener">Schneps et al. — RSVP benefits for readers with dyslexia</a></li>
     </ul>
 
-    <h3>Scroll mode</h3>
+    <h3>Flash mode</h3>
+    <p>One chunk at a time in a fixed spot. Toggle "Show leading &amp; trailing words" to see context
+    words dimmed above and below the current chunk — useful for orientation without breaking the RSVP effect.</p>
+
+    <h3>Page mode</h3>
     <p>
-      Smooth horizontal scrolling simulates the "moving window" technique. A fixed-width viewport
-      lets your eye anchor on one spot while the text flows past — like a teleprompter.
-      Narrower windows force more focus; wider windows provide more context.
+      Shows a fixed window of words as traditional flowing text, with your current reading position
+      highlighted. Switches bidirectionally with Flash mode — switching to Page jumps to the page
+      containing your current Flash position; switching back to Flash resumes from the highlighted word.
+      Use this to find your place, re-read a passage, or compare traditional vs. RSVP reading directly.
     </p>
 
-    <h3>How to use the settings</h3>
+    <h3>Settings</h3>
     <ul>
       <li><strong>WPM</strong> — words per minute. Start at 200–250, work up gradually.</li>
-      <li><strong>Size</strong> — font size. Larger is easier on mobile.</li>
-      <li><strong>Flash / Scroll</strong> — toggle reading mode.</li>
-      <li><strong>Max words / Max chars</strong> — group short words together (e.g. "and he was" at once). Reduces flicker and aids rhythm.</li>
-      <li><strong>Hyphen at</strong> — any word longer than this many characters is split with a hyphen across two flashes.</li>
-      <li><strong>Window (scroll)</strong> — visible character width in scroll mode. 30–50 ch is a comfortable starting point.</li>
-      <li><strong>Scrub bar</strong> — drag to jump to any point in the text; surrounding context appears while dragging.</li>
+      <li><strong>Size</strong> — flash display font size.</li>
+      <li><strong>Context words</strong> — show N words before/after the current chunk (flash mode).</li>
+      <li><strong>Max words / Max chars</strong> — group short words into one flash (e.g. "and he was").</li>
+      <li><strong>Hyphen at</strong> — split very long words with a hyphen across two flashes.</li>
+      <li><strong>Page size</strong> — words per page in Page mode.</li>
+      <li><strong>Scrub bar</strong> — drag to jump anywhere; context preview appears while dragging.</li>
+      <li><strong>Download text</strong> — saves the currently loaded text as a .txt file.</li>
     </ul>
 
     <h3>Tips</h3>
     <ul>
       <li>Start at <strong>200 WPM</strong> and increase by 20–50 WPM per session.</li>
       <li>Use <strong>grouping</strong> (max words 2–3) to reduce cognitive load at higher speeds.</li>
-      <li>Try <strong>scroll mode</strong> for narrative fiction — it feels more natural.</li>
-      <li>Comprehension drops sharply above 600 WPM for most people — prioritize understanding over raw speed.</li>
+      <li>Switch to <strong>Page mode</strong> mid-session to check comprehension or re-read.</li>
+      <li>Comprehension drops sharply above 600 WPM for most people.</li>
     </ul>
 
     <h3>Keyboard shortcuts</h3>
     <ul>
-      <li><span class="kbd">Space</span> — play / pause</li>
+      <li><span class="kbd">Space</span> — play / pause (flash mode)</li>
       <li><span class="kbd">←</span> — back 10 words</li>
-      <li><span class="kbd">→</span> — forward 1 word</li>
+      <li><span class="kbd">→</span> — forward 1 word / next page</li>
       <li><span class="kbd">↑</span> / <span class="kbd">↓</span> — WPM +50 / −50</li>
     </ul>
   </div>
@@ -475,58 +515,62 @@
 <script src="js/core.js"></script>
 <script>
 // ══════════════════════════════════════════════
-//  State & settings
+//  State
 // ══════════════════════════════════════════════
-let words   = [];
-let chunks  = [];      // flash mode display units
-let pos     = 0;       // chunk index (flash) or approximate word index (scroll)
-let paused  = true;
-let mode    = 'flash'; // 'flash' | 'scroll'
-let wpm     = 300;
-let timer   = null;
+let words  = [];
+let chunks = [];
+let pos    = 0;       // chunk index (flash) or word index (page)
+let paused = true;
+let mode   = 'flash'; // 'flash' | 'page'
+let wpm    = 300;
+let timer  = null;
 
 // Group settings
-let maxWords       = 1;
-let maxChars       = 12;
+let maxWords        = 1;
+let maxChars        = 12;
 let hyphenThreshold = 15;
 
-// Scroll settings
-let scrollWindowChars = 40;
-let scrollRAF         = null;
-let scrollOffset      = 0;   // pixels scrolled
-let scrollLastTime    = null;
-let charPx            = 0;   // measured monospace char width in pixels
-let wordCharOffsets   = [];  // for stats in scroll mode
+// Context words (flash)
+let showCtx    = false;
+let ctxCount   = 3;
 
-// ══════════════════════════════════════════════
-//  DOM refs
-// ══════════════════════════════════════════════
+// Page settings
+let pageSize    = 200; // words per page
+let pageWordPos = 0;   // word index of current position in page mode
+
+// ── DOM refs ──
 const wordStage   = document.getElementById('word-stage');
 const wordDisplay = document.getElementById('word-display');
-const scrollStage = document.getElementById('scroll-stage');
-const scrollClip  = document.getElementById('scroll-clip');
-const scrollText  = document.getElementById('scroll-text');
+const ctxBefore   = document.getElementById('ctx-before');
+const ctxAfter    = document.getElementById('ctx-after');
 
-const scrubBar    = document.getElementById('scrub-bar');
-const scrubFill   = document.getElementById('scrub-fill');
-const scrubPct    = document.getElementById('scrub-pct');
-const scrubCtx    = document.getElementById('scrub-context');
+const pageStageEl = document.getElementById('page-stage');
+const pageNavEl   = document.getElementById('page-nav');
+const pageInfoEl  = document.getElementById('page-info');
 
-const statsEl     = document.getElementById('stats');
-const playBtn     = document.getElementById('btn-play');
-const wpmSlider   = document.getElementById('wpm-slider');
-const wpmValEl    = document.getElementById('wpm-val');
-const sizeSlider  = document.getElementById('size-slider');
-const sizeValEl   = document.getElementById('size-val');
+const scrubBar  = document.getElementById('scrub-bar');
+const scrubFill = document.getElementById('scrub-fill');
+const scrubPct  = document.getElementById('scrub-pct');
+const scrubCtx  = document.getElementById('scrub-context');
 
-const maxWordsEl  = document.getElementById('max-words');
-const maxCharsEl  = document.getElementById('max-chars');
-const hyphenEl    = document.getElementById('hyphen-thr');
-const scrollWinEl = document.getElementById('scroll-win');
+const statsEl   = document.getElementById('stats');
+const playBtn   = document.getElementById('btn-play');
+const wpmSlider = document.getElementById('wpm-slider');
+const wpmValEl  = document.getElementById('wpm-val');
+const sizeSlider= document.getElementById('size-slider');
+const sizeValEl = document.getElementById('size-val');
 
-const bookSelect  = document.getElementById('book-select');
-const loadStatus  = document.getElementById('load-status');
-const customText  = document.getElementById('custom-text');
+const maxWordsEl = document.getElementById('max-words');
+const maxCharsEl = document.getElementById('max-chars');
+const hyphenEl   = document.getElementById('hyphen-thr');
+
+const ctxToggle  = document.getElementById('ctx-toggle');
+const ctxCountEl = document.getElementById('ctx-count');
+
+const pageSizeEl = document.getElementById('page-size');
+const bookSelect = document.getElementById('book-select');
+const loadStatus = document.getElementById('load-status');
+const customText = document.getElementById('custom-text');
 
 // ══════════════════════════════════════════════
 //  Text loading
@@ -539,15 +583,16 @@ const BOOK_FILES = {
   'tom-sawyer':   'books/tom-sawyer.txt',
 };
 
+let currentTextLabel = '';
+
 function loadText(text, label) {
   stopAll();
   words  = parseWords(text);
+  currentTextLabel = label || 'text';
   rebuildChunks();
-  pos    = 0;
-  paused = true;
-  scrollOffset = 0;
-  wordCharOffsets = buildWordCharOffsets(words);
-  if (mode === 'scroll') prepareScrollText();
+  pos         = 0;
+  pageWordPos = 0;
+  paused      = true;
   render();
   loadStatus.textContent = label ? '✓ ' + label : '';
 }
@@ -568,12 +613,73 @@ async function fetchBook(key) {
 }
 
 // ══════════════════════════════════════════════
-//  Chunks
+//  Chunks + word mapping
 // ══════════════════════════════════════════════
+let chunkWordStart = []; // chunkWordStart[i] = index into words[] where chunk i begins
+
 function rebuildChunks() {
-  chunks = buildChunks(words, maxWords, maxChars, hyphenThreshold);
-  // remap pos to nearest chunk
+  chunks = [];
+  chunkWordStart = [];
+  if (!words.length) return;
+
+  // We need to track which original word each chunk starts at.
+  // splitLongWords may expand words, so we track expansion carefully.
+  const expanded = [];       // { text, origIdx }
+  for (let i = 0; i < words.length; i++) {
+    const w = words[i];
+    if (w.length <= hyphenThreshold) {
+      expanded.push({ text: w, origIdx: i });
+    } else {
+      let rem = w, offset = 0;
+      while (rem.length > hyphenThreshold) {
+        expanded.push({ text: rem.slice(0, hyphenThreshold - 1) + '-', origIdx: i });
+        rem = rem.slice(hyphenThreshold - 1);
+      }
+      if (rem.length) expanded.push({ text: rem, origIdx: i });
+    }
+  }
+
+  let i = 0;
+  while (i < expanded.length) {
+    const token = expanded[i];
+    if (token.text.endsWith('-')) {
+      chunks.push(token.text);
+      chunkWordStart.push(token.origIdx);
+      i++;
+      continue;
+    }
+    let chunk = token.text;
+    let count = 1;
+    while (count < maxWords && i + count < expanded.length) {
+      const next = expanded[i + count];
+      if (next.text.endsWith('-')) break;
+      const candidate = chunk + ' ' + next.text;
+      if (candidate.length > maxChars) break;
+      chunk = candidate;
+      count++;
+    }
+    chunks.push(chunk);
+    chunkWordStart.push(token.origIdx);
+    i += count;
+  }
+
   pos = Math.min(pos, Math.max(0, chunks.length - 1));
+}
+
+// Map chunk index → word index
+function chunkToWord(chunkIdx) {
+  return chunkWordStart[Math.min(chunkIdx, chunkWordStart.length - 1)] || 0;
+}
+
+// Map word index → nearest chunk index (binary search on chunkWordStart)
+function wordToChunk(wordIdx) {
+  let lo = 0, hi = chunkWordStart.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1;
+    if (chunkWordStart[mid] <= wordIdx) lo = mid;
+    else hi = mid - 1;
+  }
+  return lo;
 }
 
 // ══════════════════════════════════════════════
@@ -581,30 +687,71 @@ function rebuildChunks() {
 // ══════════════════════════════════════════════
 function render() {
   if (mode === 'flash') renderFlash();
-  else renderScrollStats();
+  else renderPage();
   renderScrubBar();
   playBtn.textContent = paused ? '▶ Play' : '⏸ Pause';
+  // play button only relevant in flash mode
+  playBtn.style.display = mode === 'flash' ? '' : 'none';
+  document.getElementById('speed-btns').style.display = mode === 'flash' ? '' : 'none';
+  document.getElementById('btn-back').style.display = mode === 'flash' ? '' : 'none';
 }
 
 function renderFlash() {
-  const chunk = chunks.length ? (chunks[pos] || '—') : 'Load text';
-  wordDisplay.textContent = chunk;
+  if (!chunks.length) { wordDisplay.textContent = 'Load text'; ctxBefore.textContent = ''; ctxAfter.textContent = ''; return; }
+  wordDisplay.textContent = chunks[pos] || '—';
+
+  if (showCtx && words.length) {
+    const wi = chunkToWord(pos);
+    const { before, after } = scrubContext(words, wi, ctxCount);
+    ctxBefore.textContent = before;
+    ctxAfter.textContent  = after;
+  } else {
+    ctxBefore.textContent = '';
+    ctxAfter.textContent  = '';
+  }
+
   const total = chunks.length;
   statsEl.textContent = (pos + 1) + ' / ' + total + ' chunks';
 }
 
-function renderScrollStats() {
-  const wordIdx = approxWordFromScroll();
-  statsEl.textContent = (wordIdx + 1) + ' / ' + words.length + ' words';
+// ─── Page mode ───
+function currentPage() { return Math.floor(pageWordPos / pageSize); }
+function totalPages()  { return Math.max(1, Math.ceil(words.length / pageSize)); }
+
+function renderPage() {
+  if (!words.length) { pageStageEl.innerHTML = '<p style="color:var(--muted);font-size:.9rem">Load text to read.</p>'; return; }
+
+  const pg    = currentPage();
+  const start = pg * pageSize;
+  const end   = Math.min(start + pageSize, words.length);
+  const curWI = pageWordPos;
+
+  let html = '';
+  for (let i = start; i < end; i++) {
+    const w = escHtml(words[i]);
+    if (i === curWI) {
+      html += '<span class="cur-word">' + w + '</span> ';
+    } else {
+      html += w + ' ';
+    }
+  }
+  pageStageEl.innerHTML = html;
+
+  // scroll current word into view within the page stage
+  const curSpan = pageStageEl.querySelector('.cur-word');
+  if (curSpan) curSpan.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+
+  const tp = totalPages();
+  pageInfoEl.textContent = 'Page ' + (pg + 1) + ' of ' + tp;
+  statsEl.textContent = (pageWordPos + 1) + ' / ' + words.length + ' words';
 }
 
 function renderScrubBar() {
-  let pct;
-  if (mode === 'flash') {
-    pct = chunks.length > 1 ? (pos / (chunks.length - 1)) * 100 : 0;
-  } else {
-    const maxOff = maxScrollOffset();
-    pct = maxOff > 0 ? (scrollOffset / maxOff) * 100 : 0;
+  let pct = 0;
+  if (mode === 'flash' && chunks.length > 1) {
+    pct = (pos / (chunks.length - 1)) * 100;
+  } else if (mode === 'page' && words.length > 1) {
+    pct = (pageWordPos / (words.length - 1)) * 100;
   }
   pct = Math.min(100, Math.max(0, pct));
   scrubFill.style.width = pct + '%';
@@ -616,9 +763,7 @@ function renderScrubBar() {
 // ══════════════════════════════════════════════
 function tick() {
   if (paused || mode !== 'flash') return;
-  if (pos >= chunks.length - 1) {
-    paused = true; render(); return;
-  }
+  if (pos >= chunks.length - 1) { paused = true; render(); return; }
   pos++;
   render();
   scheduleFlash();
@@ -626,73 +771,7 @@ function tick() {
 
 function scheduleFlash() {
   clearTimeout(timer);
-  if (!paused && mode === 'flash') {
-    timer = setTimeout(tick, wpmToMs(clampWpm(wpm)));
-  }
-}
-
-// ══════════════════════════════════════════════
-//  Scroll playback
-// ══════════════════════════════════════════════
-function prepareScrollText() {
-  const text = words.join(' ');
-  scrollText.textContent = text;
-  // ensure layout
-  scrollText.style.transform = 'translateX(0)';
-  measureCharPx();
-  applyScrollWindow();
-}
-
-function measureCharPx() {
-  // Measure monospace char width by rendering a test span
-  const test = document.createElement('span');
-  test.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;font-family:"Courier New",Courier,monospace;font-size:' + getComputedStyle(document.documentElement).getPropertyValue('--word-size').trim();
-  test.textContent = 'M'.repeat(20);
-  document.body.appendChild(test);
-  charPx = test.offsetWidth / 20;
-  document.body.removeChild(test);
-}
-
-function applyScrollWindow() {
-  const windowPx = Math.round(scrollWindowChars * charPx);
-  scrollClip.style.width = Math.min(windowPx, scrollStage.offsetWidth - 8) + 'px';
-}
-
-function maxScrollOffset() {
-  // max pixels we can scroll before the text runs out
-  return Math.max(0, scrollText.scrollWidth - scrollClip.offsetWidth);
-}
-
-function approxWordFromScroll() {
-  if (!wordCharOffsets.length) return 0;
-  const charPos = Math.floor(scrollOffset / (charPx || 1));
-  return wordIndexAtChar(wordCharOffsets, charPos);
-}
-
-function scrollTick(ts) {
-  if (paused || mode !== 'scroll') { scrollLastTime = null; return; }
-  if (!scrollLastTime) { scrollLastTime = ts; scrollRAF = requestAnimationFrame(scrollTick); return; }
-
-  const elapsed = ts - scrollLastTime;
-  scrollLastTime = ts;
-
-  // speed: WPM * avg_chars_per_word / 60s = chars/s; × charPx = px/s
-  const avgCharsPerWord = 5; // +1 space = 6 chars/word on average
-  const pxPerMs = (clampWpm(wpm) * (avgCharsPerWord + 1) * (charPx || 12)) / 60000;
-  scrollOffset += pxPerMs * elapsed;
-
-  const maxOff = maxScrollOffset();
-  if (scrollOffset >= maxOff) {
-    scrollOffset = maxOff;
-    scrollText.style.transform = 'translateX(' + (-scrollOffset) + 'px)';
-    paused = true;
-    render();
-    return;
-  }
-  scrollText.style.transform = 'translateX(' + (-scrollOffset) + 'px)';
-  renderScrollStats();
-  renderScrubBar();
-  scrollRAF = requestAnimationFrame(scrollTick);
+  if (!paused && mode === 'flash') timer = setTimeout(tick, wpmToMs(clampWpm(wpm)));
 }
 
 // ══════════════════════════════════════════════
@@ -700,42 +779,29 @@ function scrollTick(ts) {
 // ══════════════════════════════════════════════
 function stopAll() {
   clearTimeout(timer);
-  if (scrollRAF) { cancelAnimationFrame(scrollRAF); scrollRAF = null; }
-  scrollLastTime = null;
   paused = true;
 }
 
 function togglePlay() {
+  if (mode !== 'flash') return;
   paused = !paused;
-  if (!paused) {
-    if (mode === 'flash') scheduleFlash();
-    else { scrollRAF = requestAnimationFrame(scrollTick); }
-  } else {
-    stopAll(); paused = true;
-  }
+  if (!paused) scheduleFlash();
+  else stopAll();
   render();
 }
 
 function restart() {
   stopAll();
-  pos = 0; scrollOffset = 0;
-  if (mode === 'scroll') scrollText.style.transform = 'translateX(0)';
+  pos = 0;
+  if (mode === 'page') { pageWordPos = 0; }
   render();
 }
 
 function stepBack(n) {
   if (mode === 'flash') {
     pos = Math.max(0, pos - n);
-  } else {
-    // step back by n words in scroll units
-    const wordIdx = Math.max(0, approxWordFromScroll() - n);
-    const charPos = wordCharOffsets[wordIdx] || 0;
-    scrollOffset = Math.max(0, charPos * (charPx || 12));
-    scrollText.style.transform = 'translateX(' + (-scrollOffset) + 'px)';
-  }
-  render();
-  if (!paused) {
-    if (mode === 'flash') scheduleFlash();
+    render();
+    if (!paused) scheduleFlash();
   }
 }
 
@@ -744,6 +810,42 @@ function setWpm(v) {
   wpmSlider.value = wpm;
   wpmValEl.textContent = wpm;
   if (!paused && mode === 'flash') { clearTimeout(timer); scheduleFlash(); }
+}
+
+// ── Page navigation ──
+function goPage(delta) {
+  const pg = currentPage() + delta;
+  const clampedPg = Math.max(0, Math.min(totalPages() - 1, pg));
+  pageWordPos = clampedPg * pageSize;
+  renderPage();
+  renderScrubBar();
+}
+
+// ══════════════════════════════════════════════
+//  Mode switch
+// ══════════════════════════════════════════════
+function setMode(m) {
+  stopAll();
+
+  if (m === 'page') {
+    // sync: flash pos → word pos for page mode
+    pageWordPos = words.length ? chunkToWord(pos) : 0;
+  } else if (m === 'flash') {
+    // sync: page word pos → chunk pos for flash mode
+    pos = words.length ? wordToChunk(pageWordPos) : 0;
+  }
+
+  mode = m;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === m));
+
+  wordStage.style.display   = m === 'flash' ? '' : 'none';
+  pageStageEl.classList.toggle('active', m === 'page');
+  pageNavEl.classList.toggle('active', m === 'page');
+
+  document.getElementById('flash-settings').style.display = m === 'flash' ? '' : 'none';
+  document.getElementById('page-settings').style.display  = m === 'page'  ? '' : 'none';
+
+  render();
 }
 
 // ══════════════════════════════════════════════
@@ -756,21 +858,18 @@ function scrubToFraction(frac) {
   if (mode === 'flash') {
     pos = Math.round(frac * (chunks.length - 1));
     renderFlash();
-    showScrubContext();
   } else {
-    scrollOffset = frac * maxScrollOffset();
-    scrollText.style.transform = 'translateX(' + (-scrollOffset) + 'px)';
-    renderScrollStats();
-    showScrubContext();
+    pageWordPos = Math.round(frac * (words.length - 1));
+    renderPage();
   }
+  showScrubContextBox();
   renderScrubBar();
 }
 
-function showScrubContext() {
-  const wordIdx = mode === 'flash'
-    ? Math.round((pos / Math.max(1, chunks.length - 1)) * (words.length - 1))
-    : approxWordFromScroll();
-  const { before, current, after } = scrubContext(words, wordIdx, 15);
+function showScrubContextBox() {
+  const wi = mode === 'flash' ? chunkToWord(pos) : pageWordPos;
+  if (!words.length) return;
+  const { before, current, after } = scrubContext(words, wi, 15);
   scrubCtx.style.display = 'block';
   scrubCtx.innerHTML =
     (before ? before + ' ' : '') +
@@ -785,20 +884,20 @@ function scrubFracFromEvent(e) {
 }
 
 function escHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 scrubBar.addEventListener('mousedown', e => {
   wasPausedBeforeScrub = paused;
-  stopAll(); paused = true;
+  stopAll();
   scrubToFraction(scrubFracFromEvent(e));
-  function onMove(e2) { scrubToFraction(scrubFracFromEvent(e2)); }
-  function onUp() {
+  const onMove = e2 => scrubToFraction(scrubFracFromEvent(e2));
+  const onUp   = () => {
     document.removeEventListener('mousemove', onMove);
     document.removeEventListener('mouseup', onUp);
     scrubCtx.style.display = 'none';
-    if (!wasPausedBeforeScrub) togglePlay();
-  }
+    if (!wasPausedBeforeScrub && mode === 'flash') togglePlay();
+  };
   document.addEventListener('mousemove', onMove);
   document.addEventListener('mouseup', onUp);
 });
@@ -806,47 +905,18 @@ scrubBar.addEventListener('mousedown', e => {
 scrubBar.addEventListener('touchstart', e => {
   e.preventDefault();
   wasPausedBeforeScrub = paused;
-  stopAll(); paused = true;
+  stopAll();
   scrubToFraction(scrubFracFromEvent(e));
-  function onMove(e2) { e2.preventDefault(); scrubToFraction(scrubFracFromEvent(e2)); }
-  function onEnd() {
+  const onMove = e2 => { e2.preventDefault(); scrubToFraction(scrubFracFromEvent(e2)); };
+  const onEnd  = () => {
     scrubBar.removeEventListener('touchmove', onMove);
     scrubBar.removeEventListener('touchend', onEnd);
     scrubCtx.style.display = 'none';
-    if (!wasPausedBeforeScrub) togglePlay();
-  }
+    if (!wasPausedBeforeScrub && mode === 'flash') togglePlay();
+  };
   scrubBar.addEventListener('touchmove', onMove, { passive: false });
   scrubBar.addEventListener('touchend', onEnd);
 }, { passive: false });
-
-// ══════════════════════════════════════════════
-//  Mode switch
-// ══════════════════════════════════════════════
-function setMode(m) {
-  stopAll();
-  mode = m;
-  document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === m));
-
-  if (m === 'flash') {
-    wordStage.style.display  = '';
-    scrollStage.classList.remove('active');
-    document.getElementById('flash-settings').style.display = '';
-    document.getElementById('scroll-settings').style.display = 'none';
-  } else {
-    wordStage.style.display  = 'none';
-    scrollStage.classList.add('active');
-    document.getElementById('flash-settings').style.display = 'none';
-    document.getElementById('scroll-settings').style.display = '';
-    // slight delay so scrollStage has rendered dimensions
-    requestAnimationFrame(() => {
-      prepareScrollText();
-      scrollText.style.transform = 'translateX(' + (-scrollOffset) + 'px)';
-      render();
-    });
-    return;
-  }
-  render();
-}
 
 // ══════════════════════════════════════════════
 //  Event wiring
@@ -855,9 +925,18 @@ playBtn.addEventListener('click', togglePlay);
 document.getElementById('btn-restart').addEventListener('click', restart);
 document.getElementById('btn-back').addEventListener('click', () => stepBack(10));
 wordStage.addEventListener('click', togglePlay);
-scrollStage.addEventListener('click', togglePlay);
 
-// WPM slider
+// Mode buttons
+document.getElementById('mode-btns').addEventListener('click', e => {
+  const btn = e.target.closest('.mode-btn');
+  if (btn) setMode(btn.dataset.mode);
+});
+
+// Page nav
+document.getElementById('btn-prev-page').addEventListener('click', () => goPage(-1));
+document.getElementById('btn-next-page').addEventListener('click', () => goPage(+1));
+
+// WPM
 wpmSlider.addEventListener('input', () => setWpm(parseInt(wpmSlider.value, 10)));
 
 // Speed buttons
@@ -868,18 +947,23 @@ document.getElementById('speed-btns').addEventListener('click', e => {
   if (btn.dataset.delta) setWpm(wpm + parseInt(btn.dataset.delta, 10));
 });
 
-// Size slider
+// Size
 sizeSlider.addEventListener('input', () => {
   const v = parseFloat(sizeSlider.value);
   sizeValEl.textContent = v + 'rem';
   document.documentElement.style.setProperty('--word-size', v + 'rem');
-  if (mode === 'scroll') { measureCharPx(); applyScrollWindow(); }
 });
 
-// Mode buttons
-document.getElementById('mode-btns').addEventListener('click', e => {
-  const btn = e.target.closest('.mode-btn');
-  if (btn) setMode(btn.dataset.mode);
+// Context words toggle
+ctxToggle.addEventListener('change', () => {
+  showCtx = ctxToggle.checked;
+  document.getElementById('ctx-count-row').style.display = showCtx ? '' : 'none';
+  if (mode === 'flash') renderFlash();
+});
+ctxCountEl.addEventListener('input', () => {
+  ctxCount = parseInt(ctxCountEl.value, 10);
+  document.getElementById('ctx-count-val').textContent = ctxCount + ' words';
+  if (mode === 'flash') renderFlash();
 });
 
 // Group settings
@@ -897,17 +981,15 @@ maxWordsEl.addEventListener('input', onGroupChange);
 maxCharsEl.addEventListener('input', onGroupChange);
 hyphenEl.addEventListener('input',   onGroupChange);
 
-// Scroll window
-scrollWinEl.addEventListener('input', () => {
-  scrollWindowChars = parseInt(scrollWinEl.value, 10);
-  document.getElementById('scroll-win-val').textContent = scrollWindowChars + ' ch';
-  if (mode === 'scroll') applyScrollWindow();
+// Page size
+pageSizeEl.addEventListener('input', () => {
+  pageSize = parseInt(pageSizeEl.value, 10);
+  document.getElementById('page-size-val').textContent = pageSize + ' w';
+  if (mode === 'page') renderPage();
 });
 
 // Books
-document.getElementById('btn-load-book').addEventListener('click', () => {
-  fetchBook(bookSelect.value);
-});
+document.getElementById('btn-load-book').addEventListener('click', () => fetchBook(bookSelect.value));
 
 // Custom text
 document.getElementById('btn-load-custom').addEventListener('click', () => {
@@ -915,31 +997,38 @@ document.getElementById('btn-load-custom').addEventListener('click', () => {
   if (txt) loadText(txt, 'Custom text');
 });
 
+// Download
+document.getElementById('btn-download').addEventListener('click', () => {
+  if (!words.length) return;
+  const blob = new Blob([words.join(' ')], { type: 'text/plain' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = (currentTextLabel || 'text').replace(/[^a-z0-9]/gi, '-').toLowerCase() + '.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
 // Keyboard
 document.addEventListener('keydown', e => {
-  if (e.target.tagName === 'TEXTAREA') return;
-  if (e.code === 'Space')       { e.preventDefault(); togglePlay(); }
-  if (e.code === 'ArrowLeft')   stepBack(10);
+  if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space' && mode === 'flash') { e.preventDefault(); togglePlay(); }
+  if (e.code === 'ArrowLeft'  && mode === 'flash') stepBack(10);
   if (e.code === 'ArrowRight') {
     if (mode === 'flash') { pos = Math.min(pos + 1, chunks.length - 1); render(); if (!paused) scheduleFlash(); }
+    else goPage(+1);
   }
   if (e.code === 'ArrowUp')   { e.preventDefault(); setWpm(wpm + 50); }
   if (e.code === 'ArrowDown') { e.preventDefault(); setWpm(wpm - 50); }
 });
 
-// Help panel
-document.getElementById('btn-help').addEventListener('click', () => {
-  document.getElementById('help-overlay').classList.add('open');
-});
-document.getElementById('btn-help-close').addEventListener('click', () => {
-  document.getElementById('help-overlay').classList.remove('open');
-});
-document.getElementById('help-overlay').addEventListener('click', e => {
-  if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
-});
+// Help
+document.getElementById('btn-help').addEventListener('click', () => document.getElementById('help-overlay').classList.add('open'));
+document.getElementById('btn-help-close').addEventListener('click', () => document.getElementById('help-overlay').classList.remove('open'));
+document.getElementById('help-overlay').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('open'); });
 
 // ══════════════════════════════════════════════
-//  Init — load default book
+//  Init
 // ══════════════════════════════════════════════
 fetchBook('pride');
 </script>
