@@ -899,7 +899,7 @@ function applyFont(name, family, weight) {
   const w = String(weight);
   document.querySelector('#word-display').style.fontWeight = w;
   document.querySelectorAll('#ctx-before,#ctx-after').forEach(el => el.style.fontWeight = w);
-  document.querySelector('#page-text').style.fontWeight = w;
+  const ps = document.querySelector('#page-stage'); if (ps) ps.style.fontWeight = w;
   document.getElementById('font-trigger-name').textContent = name;
   document.querySelectorAll('.font-item').forEach(el => {
     el.classList.toggle('selected', el.dataset.family === family && +el.dataset.weight === weight);
