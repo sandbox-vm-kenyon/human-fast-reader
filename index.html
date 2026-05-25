@@ -724,7 +724,9 @@ const BOOK_FILES = {
 };
 
 // Chunk to start at when loading each built-in book (skips Gutenberg preamble).
-const BOOK_START_CHUNK = {
+// Word indices (position in words[] array) where actual book content begins,
+// skipping Project Gutenberg preamble. Settings-agnostic — use wordToChunk() to apply.
+const BOOK_START_WORD = {
   'gatsby':       209,
   'pride':        5157,
   'alice':        229,
@@ -774,10 +776,10 @@ async function fetchBook(key) {
     const text = await r.text();
     const option = bookSelect.options[bookSelect.selectedIndex];
     loadText(text, option.textContent.trim());
-    const startChunk = BOOK_START_CHUNK[key] || 0;
-    if (startChunk > 0 && startChunk < chunks.length) {
-      pos = startChunk;
-      pageWordPos = chunkToWord(startChunk);
+    const startWord = BOOK_START_WORD[key] || 0;
+    if (startWord > 0 && startWord < words.length) {
+      pageWordPos = startWord;
+      pos = wordToChunk(startWord);
       render();
     }
   } catch(e) {
