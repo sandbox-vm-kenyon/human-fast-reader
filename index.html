@@ -722,6 +722,9 @@ function splitOnHyphens(word) {
 }
 
 function rebuildChunks() {
+  // Anchor to the first word of the current chunk so position survives a settings change.
+  const anchorWord = chunkWordStart.length ? chunkToWord(pos) : 0;
+
   chunks = [];
   chunkWordStart = [];
   if (!words.length) return;
@@ -794,7 +797,7 @@ function rebuildChunks() {
     i += count;
   }
 
-  pos = Math.min(pos, Math.max(0, chunks.length - 1));
+  pos = wordToChunk(anchorWord);
 }
 
 // Map chunk index → word index
