@@ -369,11 +369,13 @@
 
 <!-- ── Playback controls ── -->
 <div id="controls">
+  <button id="btn-first">⇤</button>
   <button id="btn-back10">⟪</button>
   <button id="btn-back1">‹</button>
   <button id="btn-play">▶ Play</button>
   <button id="btn-fwd1">›</button>
   <button id="btn-fwd10">⟫</button>
+  <button id="btn-last">⇥</button>
 </div>
 
 <!-- ── Speed buttons ── -->
@@ -751,7 +753,7 @@ function render() {
   // play button only relevant in flash mode
   playBtn.style.display = mode === 'flash' ? '' : 'none';
   document.getElementById('speed-btns').style.display = mode === 'flash' ? '' : 'none';
-  ['btn-back10','btn-back1','btn-fwd1','btn-fwd10'].forEach(id => {
+  ['btn-first','btn-back10','btn-back1','btn-fwd1','btn-fwd10','btn-last'].forEach(id => {
     document.getElementById(id).style.display = mode === 'flash' ? '' : 'none';
   });
 }
@@ -1029,10 +1031,12 @@ scrubBar.addEventListener('touchstart', e => {
 //  Event wiring
 // ══════════════════════════════════════════════
 playBtn.addEventListener('click', togglePlay);
+document.getElementById('btn-first').addEventListener('click',  () => { if (mode==='flash') { pos=0; render(); } });
 document.getElementById('btn-back10').addEventListener('click', () => stepBack(10));
 document.getElementById('btn-back1').addEventListener('click',  () => stepBack(1));
 document.getElementById('btn-fwd1').addEventListener('click',   () => stepForward(1));
 document.getElementById('btn-fwd10').addEventListener('click',  () => stepForward(10));
+document.getElementById('btn-last').addEventListener('click',   () => { if (mode==='flash') { pos=Math.max(0,chunks.length-1); render(); } });
 wordStage.addEventListener('click', togglePlay);
 
 // Mode buttons
