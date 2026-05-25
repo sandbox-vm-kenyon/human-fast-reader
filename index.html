@@ -9,6 +9,38 @@
 
     html { overflow-x: hidden; }
 
+    /* ── Bundled fonts ── */
+    @font-face { font-family: 'EB Garamond'; font-weight: 400; font-display: swap; src: url('fonts/eb-garamond-400.woff2') format('woff2'); }
+    @font-face { font-family: 'EB Garamond'; font-weight: 700; font-display: swap; src: url('fonts/eb-garamond-700.woff2') format('woff2'); }
+    @font-face { font-family: 'Cormorant Garamond'; font-weight: 400; font-display: swap; src: url('fonts/cormorant-garamond-400.woff2') format('woff2'); }
+    @font-face { font-family: 'Cormorant Garamond'; font-weight: 700; font-display: swap; src: url('fonts/cormorant-garamond-700.woff2') format('woff2'); }
+    @font-face { font-family: 'Crimson Pro'; font-weight: 400; font-display: swap; src: url('fonts/crimson-pro-400.woff2') format('woff2'); }
+    @font-face { font-family: 'Crimson Pro'; font-weight: 700; font-display: swap; src: url('fonts/crimson-pro-700.woff2') format('woff2'); }
+    @font-face { font-family: 'Libre Baskerville'; font-weight: 400; font-display: swap; src: url('fonts/libre-baskerville-400.woff2') format('woff2'); }
+    @font-face { font-family: 'Libre Baskerville'; font-weight: 700; font-display: swap; src: url('fonts/libre-baskerville-700.woff2') format('woff2'); }
+    @font-face { font-family: 'Playfair Display'; font-weight: 400; font-display: swap; src: url('fonts/playfair-display-400.woff2') format('woff2'); }
+    @font-face { font-family: 'Playfair Display'; font-weight: 700; font-display: swap; src: url('fonts/playfair-display-700.woff2') format('woff2'); }
+    @font-face { font-family: 'Atkinson Hyperlegible'; font-weight: 400; font-display: swap; src: url('fonts/atkinson-hyperlegible-400.woff2') format('woff2'); }
+    @font-face { font-family: 'Atkinson Hyperlegible'; font-weight: 700; font-display: swap; src: url('fonts/atkinson-hyperlegible-700.woff2') format('woff2'); }
+    @font-face { font-family: 'Literata'; font-weight: 400; font-display: swap; src: url('fonts/literata-400.woff2') format('woff2'); }
+    @font-face { font-family: 'Literata'; font-weight: 700; font-display: swap; src: url('fonts/literata-700.woff2') format('woff2'); }
+    @font-face { font-family: 'Lora'; font-weight: 400; font-display: swap; src: url('fonts/lora-400.woff2') format('woff2'); }
+    @font-face { font-family: 'Lora'; font-weight: 700; font-display: swap; src: url('fonts/lora-700.woff2') format('woff2'); }
+    @font-face { font-family: 'Merriweather'; font-weight: 400; font-display: swap; src: url('fonts/merriweather-400.woff2') format('woff2'); }
+    @font-face { font-family: 'Merriweather'; font-weight: 700; font-display: swap; src: url('fonts/merriweather-700.woff2') format('woff2'); }
+    @font-face { font-family: 'Source Serif 4'; font-weight: 400; font-display: swap; src: url('fonts/source-serif-4-400.woff2') format('woff2'); }
+    @font-face { font-family: 'Source Serif 4'; font-weight: 700; font-display: swap; src: url('fonts/source-serif-4-700.woff2') format('woff2'); }
+    @font-face { font-family: 'Inter'; font-weight: 400; font-display: swap; src: url('fonts/inter-400.woff2') format('woff2'); }
+    @font-face { font-family: 'Inter'; font-weight: 700; font-display: swap; src: url('fonts/inter-700.woff2') format('woff2'); }
+    @font-face { font-family: 'Lato'; font-weight: 400; font-display: swap; src: url('fonts/lato-400.woff2') format('woff2'); }
+    @font-face { font-family: 'Lato'; font-weight: 700; font-display: swap; src: url('fonts/lato-700.woff2') format('woff2'); }
+    @font-face { font-family: 'Nunito'; font-weight: 400; font-display: swap; src: url('fonts/nunito-400.woff2') format('woff2'); }
+    @font-face { font-family: 'Nunito'; font-weight: 700; font-display: swap; src: url('fonts/nunito-700.woff2') format('woff2'); }
+    @font-face { font-family: 'Open Sans'; font-weight: 400; font-display: swap; src: url('fonts/open-sans-400.woff2') format('woff2'); }
+    @font-face { font-family: 'Open Sans'; font-weight: 700; font-display: swap; src: url('fonts/open-sans-700.woff2') format('woff2'); }
+    @font-face { font-family: 'Roboto'; font-weight: 400; font-display: swap; src: url('fonts/roboto-400.woff2') format('woff2'); }
+    @font-face { font-family: 'Roboto'; font-weight: 700; font-display: swap; src: url('fonts/roboto-700.woff2') format('woff2'); }
+
     :root {
       --bg: #0a0a0a;
       --surface: #1a1a1a;
@@ -271,19 +303,57 @@
     .mode-btn { padding: 7px 10px; font-size: .93rem; border-radius: 20px; white-space: nowrap; flex: 1; }
     .mode-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 
-    /* ─────── Font row ─────── */
-    #font-row { display: flex; gap: 12px; margin: 6px 0; align-items: flex-start; flex-wrap: nowrap; }
-    #font-row .mode-section { flex: 1; min-width: 0; }
-    #font-row .mode-section.bold-section { flex: 0 0 auto; }
-    #font-select {
-      width: 100%; background: var(--surface); color: var(--text);
-      border: 1px solid rgba(255,255,255,.1); border-radius: 8px;
-      padding: 7px 10px; font-size: .93rem; cursor: pointer;
-      appearance: none; -webkit-appearance: none;
+    /* ─────── Font trigger button ─────── */
+    #font-trigger-row { margin: 6px 0; }
+    #font-trigger-btn {
+      width: 100%; text-align: left; padding: 9px 14px;
+      background: var(--surface); border: 1px solid rgba(255,255,255,.1);
+      border-radius: var(--radius); font-size: .93rem; color: var(--text);
+      display: flex; justify-content: space-between; align-items: center;
     }
-    :root.light #font-select { border-color: rgba(0,0,0,.12); }
-    #bold-check-label { display: flex; align-items: center; gap: 8px; padding: 7px 10px; font-size: .93rem; cursor: pointer; color: var(--text); white-space: nowrap; }
-    #bold-check { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
+    :root.light #font-trigger-btn { border-color: rgba(0,0,0,.12); }
+    #font-trigger-btn::after { content: '›'; font-size: 1.3rem; color: var(--muted); line-height: 1; }
+    #font-trigger-label { font-size: .7rem; color: var(--muted); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; margin-bottom: 4px; }
+
+    /* ─────── Font panel ─────── */
+    #font-panel {
+      display: none; position: fixed; inset: 0; z-index: 200;
+      background: var(--bg); flex-direction: column;
+      -webkit-overflow-scrolling: touch;
+    }
+    #font-panel.open { display: flex; }
+    #font-panel-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px 10px; border-bottom: 1px solid rgba(255,255,255,.08);
+      flex-shrink: 0;
+    }
+    :root.light #font-panel-header { border-color: rgba(0,0,0,.1); }
+    #font-panel-header h2 { font-size: 1.1rem; font-weight: 700; margin: 0; }
+    #font-panel-close {
+      background: none; border: none; font-size: 1.4rem; color: var(--muted);
+      padding: 4px 8px; cursor: pointer; line-height: 1;
+    }
+    #font-panel-instructions {
+      font-size: .84rem; color: var(--muted); padding: 8px 16px 4px;
+      flex-shrink: 0;
+    }
+    #font-panel-body { flex: 1; overflow-y: auto; padding: 0 16px 32px; }
+    .font-group-label {
+      font-size: .72rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+      color: var(--accent); margin: 18px 0 8px; padding-bottom: 6px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    :root.light .font-group-label { border-color: rgba(0,0,0,.08); }
+    .font-item {
+      padding: 10px 12px; border-radius: 8px; cursor: pointer;
+      margin: 3px 0; font-size: 18px; line-height: 1.3;
+      transition: background .12s; color: var(--text);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .font-item:active { background: rgba(255,255,255,.08); }
+    :root.light .font-item:active { background: rgba(0,0,0,.06); }
+    .font-item.selected { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); }
+    .font-item-system { font-size: 18px; }
 
     /* ─────── Settings blocks ─────── */
     .settings-block { }
@@ -504,44 +574,20 @@
 </div>
 
 <!-- ── Font + Bold ── -->
-<div id="font-row">
-  <div class="mode-section">
-    <span class="mode-section-label">Font</span>
-    <div class="group-ring" style="margin:0">
-      <select id="font-select">
-        <option value="">System Default</option>
-        <optgroup label="Sans-serif">
-          <option value="Arial, sans-serif">Arial</option>
-          <option value="'Helvetica Neue', Helvetica, Arial, sans-serif">Helvetica Neue</option>
-          <option value="Verdana, sans-serif">Verdana</option>
-          <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
-          <option value="'Gill Sans', 'Gill Sans MT', sans-serif">Gill Sans</option>
-          <option value="Optima, Candara, sans-serif">Optima</option>
-          <option value="Futura, 'Century Gothic', sans-serif">Futura</option>
-        </optgroup>
-        <optgroup label="Serif">
-          <option value="Georgia, serif">Georgia</option>
-          <option value="Baskerville, 'Baskerville Old Face', serif">Baskerville</option>
-          <option value="'Hoefler Text', Garamond, serif">Hoefler Text</option>
-          <option value="Palatino, 'Palatino Linotype', serif">Palatino</option>
-          <option value="Didot, 'Bodoni MT', serif">Didot</option>
-          <option value="'Times New Roman', Times, serif">Times New Roman</option>
-        </optgroup>
-        <optgroup label="Monospace">
-          <option value="Menlo, Monaco, 'Courier New', monospace">Menlo</option>
-          <option value="'Courier New', Courier, monospace">Courier New</option>
-        </optgroup>
-      </select>
-    </div>
+<!-- ── Font trigger ── -->
+<div id="font-trigger-row">
+  <div id="font-trigger-label">Font</div>
+  <button id="font-trigger-btn"><span id="font-trigger-name">System Default</span></button>
+</div>
+
+<!-- ── Font panel (full-screen overlay) ── -->
+<div id="font-panel" role="dialog" aria-modal="true" aria-label="Select font">
+  <div id="font-panel-header">
+    <h2>Select Font</h2>
+    <button id="font-panel-close" aria-label="Close">✕</button>
   </div>
-  <div class="mode-section bold-section">
-    <span class="mode-section-label">Style</span>
-    <div class="group-ring" style="margin:0">
-      <label id="bold-check-label">
-        <input type="checkbox" id="bold-check"> Bold
-      </label>
-    </div>
-  </div>
+  <p id="font-panel-instructions">Tap a font to apply it. Bold variants are shown separately.</p>
+  <div id="font-panel-body"><!-- populated by JS --></div>
 </div>
 
 <!-- ── Advanced settings ── -->
@@ -789,21 +835,96 @@ const wpmSlider = document.getElementById('wpm-slider');
 const wpmValEl  = document.getElementById('wpm-val');
 const sizeSlider= document.getElementById('size-slider');
 const sizeValEl = document.getElementById('size-val');
-const fontSelect = document.getElementById('font-select');
-const boldCheck  = document.getElementById('bold-check');
+// ── Font panel ──────────────────────────────────────────
+const FONT_GROUPS = [
+  {
+    label: 'Classic Book Fonts',
+    fonts: [
+      { name: 'Cormorant Garamond', family: "'Cormorant Garamond', serif" },
+      { name: 'Crimson Pro',        family: "'Crimson Pro', serif" },
+      { name: 'EB Garamond',        family: "'EB Garamond', serif" },
+      { name: 'Libre Baskerville',  family: "'Libre Baskerville', serif" },
+      { name: 'Playfair Display',   family: "'Playfair Display', serif" },
+    ]
+  },
+  {
+    label: 'High Performance Reading',
+    fonts: [
+      { name: 'Atkinson Hyperlegible', family: "'Atkinson Hyperlegible', sans-serif" },
+      { name: 'Literata',              family: "'Literata', serif" },
+      { name: 'Lora',                  family: "'Lora', serif" },
+      { name: 'Merriweather',          family: "'Merriweather', serif" },
+      { name: 'Source Serif 4',        family: "'Source Serif 4', serif" },
+    ]
+  },
+  {
+    label: 'Modern Common',
+    fonts: [
+      { name: 'Inter',      family: "'Inter', sans-serif" },
+      { name: 'Lato',       family: "'Lato', sans-serif" },
+      { name: 'Nunito',     family: "'Nunito', sans-serif" },
+      { name: 'Open Sans',  family: "'Open Sans', sans-serif" },
+      { name: 'Roboto',     family: "'Roboto', sans-serif" },
+    ]
+  }
+];
 
-function applyFont() {
-  const f = fontSelect.value || 'inherit';
-  const w = boldCheck.checked ? '700' : '400';
-  document.documentElement.style.setProperty('--reader-font', f);
-  document.documentElement.style.setProperty('--reader-weight-normal', w);
-  // word-display and ctx are always 700 weight by design; bold adds weight on top
-  document.querySelector('#word-display').style.fontWeight = boldCheck.checked ? '900' : '700';
-  document.querySelectorAll('#ctx-before, #ctx-after').forEach(el => el.style.fontWeight = boldCheck.checked ? '900' : '700');
-  document.querySelector('#page-text').style.fontWeight = w;
+let activeFont = { name: 'System Default', family: 'inherit', weight: 400 };
+
+function applyFont(name, family, weight) {
+  activeFont = { name, family, weight };
+  document.documentElement.style.setProperty('--reader-font', family);
+  const isHeavy = weight >= 700;
+  document.querySelector('#word-display').style.fontWeight   = isHeavy ? '900' : '700';
+  document.querySelectorAll('#ctx-before,#ctx-after').forEach(el => el.style.fontWeight = isHeavy ? '900' : '700');
+  document.querySelector('#page-text').style.fontWeight      = String(weight);
+  document.getElementById('font-trigger-name').textContent   = name + (isHeavy ? ' Bold' : '');
+  document.querySelectorAll('.font-item').forEach(el => {
+    el.classList.toggle('selected', el.dataset.family === family && +el.dataset.weight === weight);
+  });
 }
-fontSelect.addEventListener('change', applyFont);
-boldCheck.addEventListener('change', applyFont);
+
+function buildFontPanel() {
+  const body = document.getElementById('font-panel-body');
+  body.innerHTML = '';
+
+  // System default
+  const sys = document.createElement('div');
+  sys.className = 'font-item font-item-system' + (activeFont.family === 'inherit' ? ' selected' : '');
+  sys.dataset.family = 'inherit'; sys.dataset.weight = '400';
+  sys.textContent = 'System Default';
+  sys.addEventListener('click', () => { applyFont('System Default', 'inherit', 400); closePanel(); });
+  body.appendChild(sys);
+
+  FONT_GROUPS.forEach(group => {
+    const lbl = document.createElement('div');
+    lbl.className = 'font-group-label';
+    lbl.textContent = group.label;
+    body.appendChild(lbl);
+
+    group.fonts.forEach(font => {
+      [400, 700].forEach(weight => {
+        const el = document.createElement('div');
+        el.className = 'font-item' + (activeFont.family === font.family && activeFont.weight === weight ? ' selected' : '');
+        el.dataset.family = font.family; el.dataset.weight = weight;
+        el.style.fontFamily  = font.family;
+        el.style.fontWeight  = weight;
+        el.textContent = font.name + (weight === 700 ? ' Bold' : '');
+        el.addEventListener('click', () => {
+          applyFont(font.name, font.family, weight);
+          closePanel();
+        });
+        body.appendChild(el);
+      });
+    });
+  });
+}
+
+function openPanel()  { buildFontPanel(); document.getElementById('font-panel').classList.add('open'); document.body.style.overflow = 'hidden'; }
+function closePanel() { document.getElementById('font-panel').classList.remove('open'); document.body.style.overflow = ''; }
+
+document.getElementById('font-trigger-btn').addEventListener('click', openPanel);
+document.getElementById('font-panel-close').addEventListener('click', closePanel);
 
 const maxWordsEl = document.getElementById('max-words');
 const maxCharsEl = document.getElementById('max-chars');
