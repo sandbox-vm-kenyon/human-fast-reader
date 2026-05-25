@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Core Tests – human-fast-reader</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #f5f5f5; }
+        .test-suite { margin-bottom: 20px; }
+        .test { padding: 10px; margin: 5px 0; border-left: 4px solid #ccc; }
+        .pass { background: #e8f5e9; border-left-color: #4caf50; color: #2e7d32; }
+        .fail { background: #ffebee; border-left-color: #f44336; color: #c62828; }
+        h1 { color: #333; }
+        .summary { margin-top: 30px; padding: 15px; background: #fff; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+    <h1>Core Tests – human-fast-reader</h1>
+    <div id="results"></div>
+
+    <script src="../js/core.js"></script>
+    <script>
+        // Simple assertion framework
+        let testCount = 0;
+        let passCount = 0;
+        let failCount = 0;
+        const results = [];
+
+        function assert(condition, message) {
+            if (!condition) {
+                throw new Error(`Assertion failed: ${message}`);
+            }
+        }
+
+        function assertEqual(actual, expected, message) {
+            if (actual !== expected) {
+                throw new Error(`Expected ${expected}, got ${actual}. ${message}`);
+            }
+        }
+
+        function assertArrayEqual(actual, expected, message) {
+            if (!Array.isArray(actual) || !Array.isArray(expected)) {
+                throw new Error(`Not arrays: ${message}`);
+            }
+            if (actual.length !== expected.length) {
+                throw new Error(`Array length mismatch: expected ${expected.length}, got ${actual.length}. ${message}`);
+            }
+            for (let i = 0; i < actual.length; i++) {
+                if (actual[i] !== expected[i]) {
+                    throw new Error(`Array mismatch at index ${i}: expected ${expected[i]}, got ${actual[i]}. ${message}`);
+                }
+            }
+        }
+
+        function test(name, fn) {
+            testCount++;
+            try {
+                fn();
+                passCount++;
+                results.push({ name, status: 'pass' });
+                console.log(`✓ ${name}`);
+            } catch (err) {
+                failCount++;
+                results.push({ name, status: 'fail', error: err.message });
+                console.error(`✗ ${name}: ${err.message}`);
+            }
+        }
+
+        function renderResults() {
+            const div = document.getElementById('results');
+            let html = '<div class="test-suite">';
+            results.forEach(r => {
+                const cls = r.status === 'pass' ? 'pass' : 'fail';
+                const msg = r.error ? `<br><small>${r.error}</small>` : '';
+                html += `<div class="test ${cls}">${r.status === 'pass' ? '✓' : '✗'} ${r.name}${msg}</div>`;
+            });
+            html += '</div>';
+            html += `<div class="summary"><strong>Results:</strong> ${passCount}/${testCount} passed`;
+            if (failCount > 0) html += `, ${failCount} failed`;
+            html += '</div>';
+            div.innerHTML = html;
+        }
+
+        // ========== TESTS ==========
+
+        // parseWords tests
+        test('parseWords: empty string returns empty array', () => {
+            assertArrayEqual(parseWords(''), [], 'empty string');
+        });
+
+        test('parseWords: single word', () => {
+            assertArrayEqual(parseWords('hello'), ['hello'], 'single word');
+        });
+
+        test('parseWords: multiple words', () => {
+            assertArrayEqual(parseWords('hello world foo'), ['hello', 'world', 'foo'], 'multiple words');
+        });
+
+        test('parseWords: filters empty strings from extra whitespace', () => {
+            assertArrayEqual(parseWords('hello  world   foo'), ['hello', 'world', 'foo'], 'extra whitespace');
+        });
+
+        test('parseWords: strips leading/trailing whitespace', () => {
+            assertArrayEqual(parseWords('  hello world  '), ['hello', 'world'], 'leading/trailing');
+        });
+
+        // clampWpm tests
+        test('clampWpm: below 50 clamps to 50', () => {
+            assertEqual(clampWpm(30), 50, 'below 50');
+            assertEqual(clampWpm(0), 50, 'zero');
+            assertEqual(clampWpm(-100), 50, 'negative');
+        });
+
+        test('clampWpm: above 1000 clamps to 1000', () => {
+            assertEqual(clampWpm(1500), 1000, 'above 1000');
+            assertEqual(clampWpm(2000), 1000, 'way above');
+        });
+
+        test('clampWpm: within range returns same', () => {
+            assertEqual(clampWpm(50), 50, 'at min');
+            assertEqual(clampWpm(1000), 1000, 'at max');
+            assertEqual(clampWpm(300), 300, 'middle');
+        });
+
+        // wpmToMs tests
+        test('wpmToMs: 60 WPM = 1000ms', () => {
+            assertEqual(wpmToMs(60), 1000, '60 wpm');
+        });
+
+        test('wpmToMs: 300 WPM = 200ms', () => {
+            assertEqual(wpmToMs(300), 200, '300 wpm');
+        });
+
+        test('wpmToMs: 600 WPM = 100ms', () => {
+            assertEqual(wpmToMs(600), 100, '600 wpm');
+        });
+
+        // buildIndex tests
+        test('buildIndex: returns state with words, pos=0, paused=true', () => {
+            const words = ['hello', 'world'];
+            const state = buildIndex(words);
+            assert(state.words !== undefined, 'has words property');
+            assertArrayEqual(state.words, ['hello', 'world'], 'words array');
+            assertEqual(state.pos, 0, 'pos is 0');
+            assertEqual(state.paused, true, 'paused is true');
+        });
+
+        test('buildIndex: does not mutate input', () => {
+            const input = ['a', 'b', 'c'];
+            const original = [...input];
+            buildIndex(input);
+            assertArrayEqual(input, original, 'input unchanged');
+        });
+
+        // advance tests
+        test('advance: increments pos by 1', () => {
+            const state = buildIndex(['a', 'b', 'c']);
+            const next = advance(state);
+            assertEqual(next.pos, 1, 'pos incremented');
+            assertEqual(state.pos, 0, 'original unchanged');
+        });
+
+        test('advance: clamps pos to words.length - 1', () => {
+            const state = buildIndex(['a', 'b', 'c']);
+            state.pos = 2;
+            const next = advance(state);
+            assertEqual(next.pos, 2, 'clamped at end');
+        });
+
+        test('advance: preserves other state properties', () => {
+            const state = buildIndex(['a', 'b', 'c']);
+            state.paused = false;
+            const next = advance(state);
+            assertEqual(next.paused, false, 'paused preserved');
+        });
+
+        test('advance: does not mutate input', () => {
+            const state = buildIndex(['a', 'b', 'c']);
+            const originalPos = state.pos;
+            advance(state);
+            assertEqual(state.pos, originalPos, 'input unchanged');
+        });
+
+        // currentWord tests
+        test('currentWord: returns word at state.pos', () => {
+            const state = buildIndex(['hello', 'world', 'foo']);
+            assertEqual(currentWord(state), 'hello', 'first word');
+            state.pos = 1;
+            assertEqual(currentWord(state), 'world', 'second word');
+            state.pos = 2;
+            assertEqual(currentWord(state), 'foo', 'third word');
+        });
+
+        // Render results
+        renderResults();
+    </script>
+</body>
+</html>
