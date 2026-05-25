@@ -272,11 +272,19 @@
     #book-select option { background: #1a1a2e; }
     #load-status { font-size: .75rem; color: var(--muted); text-align: center; margin: 2px 0 6px; min-height: 1em; }
 
-    /* ─────── Toolbar row (download) ─────── */
-    #toolbar {
-      display: flex; gap: 8px; margin: 4px 0; flex-wrap: wrap;
+/* ─────── Doc label ─────── */
+    #doc-label {
+      font-size: .72rem; color: var(--muted);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      max-width: 40vw; flex: 1; text-align: center;
     }
-    #toolbar button { font-size: .8rem; padding: 7px 14px; }
+
+    /* ─────── Bottom download ─────── */
+    #btn-download {
+      display: block; width: 100%; margin-top: 24px;
+      font-size: .8rem; padding: 10px 14px;
+      background: var(--surface); border: 1px solid rgba(255,255,255,.1);
+    }
 
     /* ─────── Custom text ─────── */
     #custom-text {
@@ -328,6 +336,7 @@
 <!-- ── Header ── -->
 <header>
   <h1>⚡ Speed Reader</h1>
+  <span id="doc-label"></span>
   <span id="stats">0 / 0</span>
   <button id="btn-help" title="Help &amp; Science">?</button>
 </header>
@@ -442,10 +451,6 @@
   </div>
 </div>
 
-<!-- ── Toolbar ── -->
-<div id="toolbar">
-  <button id="btn-download">⬇ Download text</button>
-</div>
 
 <!-- ── Books ── -->
 <div id="books-row">
@@ -640,6 +645,14 @@ function loadText(text, label) {
   paused      = true;
   render();
   loadStatus.textContent = label ? '✓ ' + label : '';
+  const docLabelEl = document.getElementById('doc-label');
+  if (docLabelEl) {
+    if (label) {
+      docLabelEl.textContent = label;
+    } else if (words.length) {
+      docLabelEl.textContent = words.slice(0, 6).join(' ') + '…';
+    }
+  }
 }
 
 async function fetchBook(key) {
@@ -1218,5 +1231,6 @@ document.addEventListener('visibilitychange', () => { if (document.hidden && !pa
 // Fallback for desktop focus loss
 window.addEventListener('blur', () => { if (!paused) { stopAll(); render(); } });
 </script>
+<button id="btn-download">⬇ Download txt file of currently loaded text</button>
 </body>
 </html>
