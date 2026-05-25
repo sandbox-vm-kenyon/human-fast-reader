@@ -360,9 +360,11 @@
 
 <!-- ── Playback controls ── -->
 <div id="controls">
-  <button id="btn-restart">↩ Restart</button>
+  <button id="btn-back10">⟪</button>
+  <button id="btn-back1">‹</button>
   <button id="btn-play">▶ Play</button>
-  <button id="btn-back">−10w</button>
+  <button id="btn-fwd1">›</button>
+  <button id="btn-fwd10">⟫</button>
 </div>
 
 <!-- ── Speed buttons ── -->
@@ -736,7 +738,9 @@ function render() {
   // play button only relevant in flash mode
   playBtn.style.display = mode === 'flash' ? '' : 'none';
   document.getElementById('speed-btns').style.display = mode === 'flash' ? '' : 'none';
-  document.getElementById('btn-back').style.display = mode === 'flash' ? '' : 'none';
+  ['btn-back10','btn-back1','btn-fwd1','btn-fwd10'].forEach(id => {
+    document.getElementById(id).style.display = mode === 'flash' ? '' : 'none';
+  });
 }
 
 function renderFlash() {
@@ -875,6 +879,14 @@ function stepBack(n) {
   }
 }
 
+function stepForward(n) {
+  if (mode === 'flash') {
+    pos = Math.min(chunks.length - 1, pos + n);
+    render();
+    if (!paused) scheduleFlash();
+  }
+}
+
 function setWpm(v) {
   wpm = clampWpm(v);
   wpmSlider.value = wpm;
@@ -1004,8 +1016,10 @@ scrubBar.addEventListener('touchstart', e => {
 //  Event wiring
 // ══════════════════════════════════════════════
 playBtn.addEventListener('click', togglePlay);
-document.getElementById('btn-restart').addEventListener('click', restart);
-document.getElementById('btn-back').addEventListener('click', () => stepBack(10));
+document.getElementById('btn-back10').addEventListener('click', () => stepBack(10));
+document.getElementById('btn-back1').addEventListener('click',  () => stepBack(1));
+document.getElementById('btn-fwd1').addEventListener('click',   () => stepForward(1));
+document.getElementById('btn-fwd10').addEventListener('click',  () => stepForward(10));
 wordStage.addEventListener('click', togglePlay);
 
 // Mode buttons
