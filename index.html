@@ -96,11 +96,11 @@
       display: none;
       background: var(--word-bg);
       border-radius: var(--radius);
-      min-height: 220px;
       padding: 20px;
       position: relative;
-      overflow-y: hidden;
-      max-height: 55vh;
+      overflow: hidden;
+      /* line-height 1.75 × font ~1.1rem ≈ 1.925rem per line; show 8 complete lines */
+      height: calc(8 * 1.75 * clamp(1rem, 3vw, 1.2rem) + 40px);
       touch-action: none;
       user-select: none;
     }
@@ -110,6 +110,7 @@
       line-height: 1.75;
       color: rgba(255,255,255,.7);
       word-spacing: .12em;
+      overflow: hidden;
     }
     #page-text .cur-word {
       color: #fff;
@@ -762,10 +763,6 @@ function renderPage() {
     }
   }
   pageStageEl.innerHTML = html;
-
-  // scroll current word into view within the page stage
-  const curSpan = pageStageEl.querySelector('.cur-word');
-  if (curSpan) curSpan.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 
   const tp = totalPages();
   pageInfoEl.textContent = 'Page ' + (pg + 1) + ' of ' + tp;
