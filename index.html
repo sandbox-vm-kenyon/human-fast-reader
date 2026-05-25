@@ -660,6 +660,20 @@ const BOOK_FILES = {
   'war':          'books/the-war-of-the-worlds-h-g-wells.txt',
 };
 
+// Chunk to start at when loading each built-in book (skips Gutenberg preamble).
+const BOOK_START_CHUNK = {
+  'gatsby':       210,
+  'pride':        0,
+  'alice':        0,
+  'dorian':       0,
+  'frankenstein': 0,
+  'tom-sawyer':   0,
+  'dracula':      0,
+  'moby':         0,
+  'sherlock':     0,
+  'war':          0,
+};
+
 let currentTextLabel = '';
 
 function loadText(text, label) {
@@ -697,6 +711,12 @@ async function fetchBook(key) {
     const text = await r.text();
     const option = bookSelect.options[bookSelect.selectedIndex];
     loadText(text, option.textContent.trim());
+    const startChunk = BOOK_START_CHUNK[key] || 0;
+    if (startChunk > 0 && startChunk < chunks.length) {
+      pos = startChunk;
+      pageWordPos = chunkToWord(startChunk);
+      render();
+    }
   } catch(e) {
     loadStatus.textContent = 'Error loading book.';
   }
