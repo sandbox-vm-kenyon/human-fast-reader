@@ -99,10 +99,11 @@
       padding: 20px;
       position: relative;
       overflow: hidden;
-      /* line-height 1.75 × font ~1.1rem ≈ 1.925rem per line; show 8 complete lines */
-      height: calc(8 * 1.75 * clamp(1rem, 3vw, 1.2rem) + 40px);
+      /* line-height 1.75 × font ~1.1rem; show 18 complete lines */
+      height: calc(18 * 1.75 * clamp(1rem, 3vw, 1.2rem) + 40px);
       touch-action: none;
       user-select: none;
+      overscroll-behavior: none;
     }
     #page-stage.active { display: block; }
     #page-text {
@@ -562,6 +563,7 @@ let showCtx = false;
 // Page settings
 let pageSize    = 200; // words per page
 let pageWordPos = 0;   // word index of current position in page mode
+let pageStarts  = [0];  // pageStarts[n] = word index where page n begins
 
 // ── DOM refs ──
 const wordStage   = document.getElementById('word-stage');
@@ -620,6 +622,7 @@ function loadText(text, label) {
   currentTextLabel = label || 'text';
   rebuildChunks();
   updateAvgWpm();
+  pageStarts  = [0];
   pos         = 0;
   pageWordPos = 0;
   paused      = true;
@@ -745,30 +748,54 @@ function renderFlash() {
 }
 
 // ─── Page mode ───
-function currentPage() { return Math.floor(pageWordPos / pageSize); }
-function totalPages()  { return Math.max(1, Math.ceil(words.length / pageSize)); }
+function currentPage() {
+  let pg = 0;
+  for (let i = 1; i < pageStarts.length; i++) {
+    if (pageStarts[i] <= pageWordPos) pg = i; else break;
+  }
+  return pg;
+}
+
+function totalPages() { return Math.max(1, pageStarts.length); }
 
 function renderPage() {
   if (!words.length) { pageStageEl.innerHTML = '<p style="color:var(--muted);font-size:.9rem">Load text to read.</p>'; return; }
 
   const pg    = currentPage();
-  const start = pg * pageSize;
-  const end   = Math.min(start + pageSize, words.length);
+  const start = pageStarts[pg];
   const curWI = pageWordPos;
 
+  // Render a large batch; we trim to what is actually visible
+  const batchEnd = Math.min(start + 600, words.length);
   let html = '';
-  for (let i = start; i < end; i++) {
+  for (let i = start; i < batchEnd; i++) {
     const w = escHtml(words[i]);
     if (i === curWI) {
-      html += '<span class="cur-word">' + w + '</span> ';
+      html += '<span class="cur-word" data-wi="' + i + '">' + w + '</span> ';
     } else {
-      html += w + ' ';
+      html += '<span data-wi="' + i + '">' + w + '</span> ';
     }
   }
   pageStageEl.innerHTML = html;
 
-  const tp = totalPages();
-  pageInfoEl.textContent = 'Page ' + (pg + 1) + ' of ' + tp;
+  // Trim spans that overflow the container bottom
+  const containerBottom = pageStageEl.getBoundingClientRect().bottom;
+  const spans = Array.from(pageStageEl.querySelectorAll('span[data-wi]'));
+  let lastVisibleWi = start;
+  for (const sp of spans) {
+    if (sp.getBoundingClientRect().bottom <= containerBottom + 2) {
+      lastVisibleWi = parseInt(sp.dataset.wi, 10);
+    } else {
+      sp.remove();
+    }
+  }
+
+  // Record next page start if not yet known
+  const nextStart = lastVisibleWi + 1;
+  if (nextStart < words.length && pageStarts[pg + 1] === undefined) {
+    pageStarts[pg + 1] = nextStart;
+  }
+
   statsEl.textContent = (pageWordPos + 1) + ' / ' + words.length + ' words';
 }
 
@@ -846,9 +873,15 @@ function updateAvgWpm() {
 
 // ── Page navigation ──
 function goPage(delta) {
-  const pg = currentPage() + delta;
-  const clampedPg = Math.max(0, Math.min(totalPages() - 1, pg));
-  pageWordPos = clampedPg * pageSize;
+  if (delta > 0) {
+    // Ensure next page boundary is measured
+    if (pageStarts[currentPage() + 1] === undefined) renderPage();
+    const next = pageStarts[currentPage() + 1];
+    if (next === undefined || next >= words.length) return;
+    pageWordPos = next;
+  } else {
+    pageWordPos = pageStarts[Math.max(0, currentPage() - 1)];
+  }
   renderPage();
   renderScrubBar();
 }
@@ -997,6 +1030,7 @@ function onGroupChange() {
   document.getElementById('hyphen-val').textContent    = hyphenThreshold;
   rebuildChunks();
   updateAvgWpm();
+  pageStarts = [0];
   render();
 }
 maxWordsEl.addEventListener('input', () => { clearProfile(); onGroupChange(); });
@@ -1086,6 +1120,9 @@ document.getElementById('help-overlay').addEventListener('click', e => { if (e.t
 // ══════════════════════════════════════════════
 fetchBook('gatsby');
 
+
+// Prevent finger scroll within page stage without blocking page scroll
+pageStageEl.addEventListener('touchmove', e => { e.preventDefault(); }, { passive: false });
 // Stop playback when page is hidden (covers iOS app switching, tab switching, lock screen)
 document.addEventListener('visibilitychange', () => { if (document.hidden && !paused) { stopAll(); render(); } });
 // Fallback for desktop focus loss
