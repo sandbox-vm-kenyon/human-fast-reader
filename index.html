@@ -886,6 +886,20 @@
     <label for="show-core-box">Show box around core word(s)</label>
   </div>
 
+  <!-- Complexity-based per-chunk slowdown -->
+  <div class="toggle-row">
+    <input type="checkbox" id="complexity-slowdown" checked>
+    <label for="complexity-slowdown">Complexity slowdown factor</label>
+  </div>
+  <div class="slider-row indented-child">
+    <label for="complexity-weight">Slowdown weight</label>
+    <input type="number" id="complexity-weight" class="num-input" min="0" max="2" step="0.05" value="0.20">
+  </div>
+  <div class="slider-row indented-child">
+    <label for="complexity-curve">Slowdown curve</label>
+    <input type="number" id="complexity-curve" class="num-input" min="1" max="4" step="0.1" value="2.5">
+  </div>
+
   <!-- Underline beneath the reading panel -->
   <div class="toggle-row">
     <input type="checkbox" id="show-underline" checked>
@@ -1110,6 +1124,14 @@ let pauseSentence    = false;
 let sentenceMult     = 1.80;
 let pauseTransition  = false;
 let transitionMult   = 1.60;
+
+// Complexity slowdown — longer / more-word chunks get extra display time.
+// slowdown = 1 + weight * (effectiveLength / baseline) ^ curve, applied
+// multiplicatively to the per-chunk delay alongside punctuation pacing.
+let complexitySlowdownEnabled = true;
+let complexityWeight   = 0.20;  // ~3x at 25 effective chars with curve 2.5, baseline 10
+let complexityCurve    = 2.5;
+const COMPLEXITY_BASELINE = 10; // internal; "typical" effective chunk length
 
 // Page settings
 let pageSize    = 200; // words per page
@@ -1824,6 +1846,29 @@ function tick() {
 // Per-chunk pacing multiplier: applied to the delay BEFORE advancing past the
 // chunk currently being displayed (chunks[pos]). Sentence-end has priority
 // over transition.
+// Compute "effective length" for complexity slowdown per spec:
+//   - keep spaces and hyphens, strip other punctuation
+//   - count chars including spaces/hyphens
+//   - count words (hyphens act as spaces for splitting)
+//   - effectiveLength = charCount + max(0, wordCount - 1)
+function chunkEffectiveLength(chunkText) {
+  if (!chunkText) return 0;
+  // Remove punctuation EXCEPT hyphens/dashes and whitespace.
+  const cleaned = chunkText.replace(/[^\p{L}\p{N}\s\-‐-—]/gu, '');
+  const charCount = cleaned.length;
+  // Split on whitespace OR hyphens/dashes for word count
+  const wordCount = cleaned.split(/[\s\-‐-—]+/).filter(Boolean).length;
+  return charCount + Math.max(0, wordCount - 1);
+}
+
+function chunkComplexitySlowdown(chunkText) {
+  if (!complexitySlowdownEnabled) return 1.0;
+  const eff = chunkEffectiveLength(chunkText);
+  if (eff <= 0) return 1.0;
+  const ratio = eff / COMPLEXITY_BASELINE;
+  return 1.0 + complexityWeight * Math.pow(ratio, complexityCurve);
+}
+
 function chunkPaceMultiplier(chunkText) {
   if (!chunkText) return 1.0;
   if (pauseSentence   && endsSentence(chunkText)) return sentenceMult;
@@ -1840,7 +1885,7 @@ function scheduleFlash() {
   clearTimeout(timer);
   if (!paused && mode === 'flash') {
     const base = wpmToMs(clampWpm(wpm));
-    const mult = chunkPaceMultiplier(chunks[pos]);
+    const mult = chunkPaceMultiplier(chunks[pos]) * chunkComplexitySlowdown(chunks[pos]);
     timer = setTimeout(tick, Math.round(base * mult));
   }
 }
@@ -1902,7 +1947,9 @@ function updateAvgWpm() {
   // Mean pacing multiplier across all chunks: extra delay at sentence/transition
   // endings reduces the effective WPM proportionally.
   let multSum = 0;
-  for (let i = 0; i < chunks.length; i++) multSum += chunkPaceMultiplier(chunks[i]);
+  for (let i = 0; i < chunks.length; i++) {
+    multSum += chunkPaceMultiplier(chunks[i]) * chunkComplexitySlowdown(chunks[i]);
+  }
   const avgMult = multSum / chunks.length;
   const effective = Math.round(wordsPerChunk * wpm / avgMult);
   wpmValEl.textContent = wpm + '/' + effective;
@@ -2286,6 +2333,33 @@ showUnderlineEl.addEventListener('change', () => {
 });
 // Apply initial state from default-checked input.
 wordStage.classList.toggle('show-underline', showUnderlineEl.checked);
+
+// Complexity slowdown
+const complexitySlowdownEl = document.getElementById('complexity-slowdown');
+const complexityWeightEl   = document.getElementById('complexity-weight');
+const complexityCurveEl    = document.getElementById('complexity-curve');
+function applyComplexityDisabled() {
+  complexityWeightEl.disabled = !complexitySlowdownEnabled;
+  complexityCurveEl.disabled  = !complexitySlowdownEnabled;
+}
+function onComplexityChange() {
+  complexitySlowdownEnabled = complexitySlowdownEl.checked;
+  let w = parseFloat(complexityWeightEl.value);
+  if (!isFinite(w)) w = 0; w = Math.max(0, Math.min(2, w));
+  complexityWeightEl.value = w.toFixed(2);
+  complexityWeight = w;
+  let c = parseFloat(complexityCurveEl.value);
+  if (!isFinite(c)) c = 1; c = Math.max(1, Math.min(4, c));
+  complexityCurveEl.value = c.toFixed(1);
+  complexityCurve = c;
+  applyComplexityDisabled();
+  updateAvgWpm();
+  if (!paused && mode === 'flash') { clearTimeout(timer); scheduleFlash(); }
+}
+complexitySlowdownEl.addEventListener('change', onComplexityChange);
+complexityWeightEl.addEventListener('change',   onComplexityChange);
+complexityCurveEl.addEventListener('change',    onComplexityChange);
+applyComplexityDisabled();
 
 // Pause playback when window loses focus
 const pauseOnBlurEl = document.getElementById('pause-on-blur');
