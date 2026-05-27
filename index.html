@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>Speed Reader</title>
+  <title>Enhanced RSVP Reader</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; touch-action: manipulation; }
 
@@ -633,8 +633,9 @@
     #complexity-help-overlay {
       display: none; position: fixed; inset: 0; z-index: 160;
       background: rgba(0,0,0,.7);
-      align-items: center; justify-content: center;
+      align-items: flex-start; justify-content: center;
       padding: 20px clamp(8px,4vw,16px); overflow-y: auto;
+      max-width: 100vw;
     }
     #complexity-help-overlay.open { display: flex; }
     #complexity-help-panel {
@@ -642,7 +643,7 @@
       border: 1px solid rgba(255,255,255,.1);
       border-radius: var(--radius);
       padding: 24px 20px;
-      max-width: 600px; width: 100%;
+      max-width: 560px; width: 100%;
       position: relative;
     }
     #complexity-help-panel h2 { color: var(--accent); margin-bottom: 8px; font-size: 1.2rem; }
@@ -696,7 +697,7 @@
 <!-- ── Header ── -->
 <header>
   <div id="header-top">
-    <h1>⚡ Speed Reader</h1>
+    <h1>⚡ Enhanced RSVP Reader</h1>
     <span id="header-subtitle">RSVP Method Text Reader</span>
     <div id="header-controls">
       <span id="stats">0 / 0</span>
@@ -1095,29 +1096,40 @@
     <h3>What it does</h3>
     <ul>
       <li>Bigger / busier chunk → longer display time.</li>
-      <li>Default: <code>mult 1.20 × exp 1.5</code> → 30-char chunk ≈ 2× as long.</li>
+      <li>Adds to (not multiplies with) the punctuation pacing pause.</li>
     </ul>
 
     <h3>Multiplier</h3>
     <ul>
-      <li>How much extra time the slowdown can add.</li>
+      <li>Slowdown reaches this value at ~10 effective chars.</li>
       <li><code>1.00</code> = off.</li>
-      <li>Higher = stronger slowdown overall.</li>
     </ul>
 
-    <h3>Exponent</h3>
+    <h3>Exponent (curve shape)</h3>
     <ul>
-      <li><code>= 1</code> linear (proportional to length).</li>
-      <li><code>&gt; 1</code> curves up — long chunks slow more than proportionally.</li>
+      <li><code>= 1</code> linear.</li>
+      <li><code>&gt; 1</code> curves up — outliers feel it more.</li>
       <li><code>&lt; 1</code> curves down — fast early, then plateaus.</li>
+    </ul>
+
+    <h3>Invert curve</h3>
+    <ul>
+      <li>Reflects a positive (&gt; 1) exponent into a fast-early-rise → hard-plateau shape.</li>
+      <li>Past ~10 effective chars, slowdown stays at the multiplier.</li>
+    </ul>
+
+    <h3>Effective length</h3>
+    <ul>
+      <li>Characters + (extra-words bonus, when toggled on).</li>
+      <li>Hyphens count as chars and as word splitters.</li>
     </ul>
 
     <h3>Try these</h3>
     <ul>
       <li><strong>Default</strong> — <code>1.20 × 1.5</code> · slight curve up.</li>
       <li><strong>Linear</strong> — <code>1.80 × 1.0</code> · proportional.</li>
-      <li><strong>Curve down</strong> — <code>2.27 × 0.5</code> · short/mid slowed, outliers capped.</li>
-      <li><strong>Outlier-only</strong> — <code>1.20 × 2.5</code> · short chunks untouched, long ones heavily penalized.</li>
+      <li><strong>Front-loaded</strong> — <code>1.50 × 2.0</code>, invert ON · most slowdown done by ~7 chars, plateaus after.</li>
+      <li><strong>Outlier-focused</strong> — <code>1.20 × 2.5</code> · short chunks untouched, long ones heavily penalized.</li>
     </ul>
   </div>
 </div>
