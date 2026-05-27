@@ -365,6 +365,12 @@
 
     /* ─────── Settings blocks ─────── */
     .settings-block { }
+    .grouping-cluster {
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 8px;
+      padding: 8px 10px;
+      margin: 6px 0 10px;
+    }
     .group-ring {
       border: 1px solid rgba(255,255,255,.1);
       border-radius: var(--radius);
@@ -619,11 +625,17 @@
     <label for="ctx-toggle">Show leading &amp; trailing words</label>
   </div>
 
-  <!-- Group settings -->
+  <!-- Group settings (bordered cluster) -->
+  <div class="grouping-cluster">
   <div class="slider-row">
     <label for="max-words">Max words shown</label>
     <input type="range" id="max-words" min="1" max="7" step="1" value="1">
     <span class="val" id="max-words-val">1</span>
+  </div>
+  <div class="slider-row">
+    <label for="single-word-max-length">Single word max length</label>
+    <input type="range" id="single-word-max-length" min="3" max="30" step="1" value="8">
+    <span class="val" id="single-word-max-length-val">8</span>
   </div>
   <!-- Prevent grouping across punctuation boundaries -->
   <div class="toggle-row">
@@ -635,10 +647,11 @@
     <label for="no-cross-transition">Prevent grouping across ", / ; / : / -"</label>
   </div>
   <div class="slider-row">
-    <label for="max-chars">Max multi-word char count</label>
+    <label for="max-chars">Max total group length</label>
     <input type="range" id="max-chars" min="1" max="50" step="1" value="12">
     <span class="val" id="max-chars-val">12</span>
   </div>
+  </div><!-- /.grouping-cluster -->
   <div class="slider-row">
     <label for="hyphen-thr">Word-hyphenation threshold</label>
     <input type="range" id="hyphen-thr" min="4" max="40" step="1" value="15">
@@ -841,6 +854,7 @@ let maxWords        = 1;
 let maxChars        = 12;
 let hyphenThreshold = 15;
 let splitHyphens    = true;
+let singleWordMaxLength = 8;
 
 // Context words
 let showCtx = false;
@@ -1021,6 +1035,7 @@ const hyphenEl   = document.getElementById('hyphen-thr');
 
 const ctxToggle       = document.getElementById('ctx-toggle');
 const splitHyphensEl  = document.getElementById('split-hyphens');
+const singleWordMaxLengthEl = document.getElementById('single-word-max-length');
 
 const pageSizeEl = document.getElementById('page-size');
 const bookSelect = document.getElementById('book-select');
@@ -1203,6 +1218,9 @@ function rebuildChunks() {
   function greedyAdvance(start, end, wordCap) {
     const first = expanded[start];
     if (isHyphenEnd(first.text)) return 1;
+    // Single-word-max-length: any token longer than this cap is excluded from
+    // grouping entirely — it stands alone.
+    if (first.text.length > singleWordMaxLength) return 1;
     let chunkText = first.text;
     let count = 1;
     // If the very first token already ends a sentence/transition that we honor,
@@ -1214,6 +1232,8 @@ function rebuildChunks() {
     while (count < wordCap && start + count < end) {
       const next = expanded[start + count];
       if (isHyphenEnd(next.text)) break;
+      // Single-word-max-length applies to followers too — never group them in.
+      if (next.text.length > singleWordMaxLength) break;
       // Small-word preference (sentence-aware, phrase-aware when toggled):
       // defer a small word from attaching to a long opener if a small-word run
       // follows in the same sentence (and same phrase when noCrossTransition is on).
@@ -1696,9 +1716,11 @@ function onGroupChange() {
   maxChars        = parseInt(maxCharsEl.value, 10);
   hyphenThreshold = parseInt(hyphenEl.value, 10);
   splitHyphens    = splitHyphensEl.checked;
+  singleWordMaxLength = parseInt(singleWordMaxLengthEl.value, 10);
   document.getElementById('max-words-val').textContent = maxWords;
   document.getElementById('max-chars-val').textContent = maxChars;
   document.getElementById('hyphen-val').textContent    = hyphenThreshold;
+  document.getElementById('single-word-max-length-val').textContent = singleWordMaxLength;
   rebuildChunks();
   updateAvgWpm();
   pageStarts = [0];
@@ -1708,6 +1730,7 @@ maxWordsEl.addEventListener('input',    () => { clearProfile(); onGroupChange();
 maxCharsEl.addEventListener('input',    () => { clearProfile(); onGroupChange(); });
 hyphenEl.addEventListener('input',      () => { clearProfile(); onGroupChange(); });
 splitHyphensEl.addEventListener('change', () => { onGroupChange(); });
+singleWordMaxLengthEl.addEventListener('input', () => { onGroupChange(); });
 
 // Repeated-character condensing (RSVP display only)
 const condenseRepeatsEl   = document.getElementById('condense-repeats');
