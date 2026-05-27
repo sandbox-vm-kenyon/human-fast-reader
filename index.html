@@ -375,7 +375,7 @@
 
     /* ─────── Font trigger button ─────── */
     #font-trigger-row { margin: 6px 0; }
-    #font-trigger-label { font-family: var(--reader-font); font-size: .85rem; color: var(--muted); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; margin-bottom: 4px; }
+    #font-trigger-label { font-family: var(--reader-font); font-size: .95rem; color: var(--muted); font-weight: 400; letter-spacing: 0; text-transform: none; margin-bottom: 4px; }
     #font-trigger-controls { display: flex; gap: 4px; align-items: stretch; }
     #font-cycle-prev, #font-cycle-next {
       flex: 0 0 auto; padding: 9px 12px; font-size: 1.1rem; font-weight: 700;
@@ -881,7 +881,7 @@
 
   <!-- Underline beneath the reading panel -->
   <div class="toggle-row">
-    <input type="checkbox" id="show-underline">
+    <input type="checkbox" id="show-underline" checked>
     <label for="show-underline">Show underline</label>
   </div>
 </div>
@@ -1074,7 +1074,7 @@ let singleWordMaxLength = 8;
 // Context words
 let showCtx = false;
 let showCoreBox = false;        // box around central chunk (only when showCtx)
-let showUnderline = false;      // horizontal underline beneath the RSVP panel
+let showUnderline = true;       // horizontal underline beneath the RSVP panel
 let alignCentralChar = true;    // align chunk so central character is fixed at center
 let highlightCentralChar = false; // color the central character red
 
@@ -1201,7 +1201,11 @@ function applyFont(name, family, weight) {
   document.querySelector('#word-display').style.fontWeight = w;
   document.querySelectorAll('#ctx-before,#ctx-after').forEach(el => el.style.fontWeight = w);
   const ps = document.querySelector('#page-stage'); if (ps) ps.style.fontWeight = w;
-  document.getElementById('font-trigger-name').textContent = name;
+  const triggerNameEl = document.getElementById('font-trigger-name');
+  triggerNameEl.textContent = name;
+  // Render the font name in the actual selected font so users see the typeface.
+  triggerNameEl.style.fontFamily = family;
+  triggerNameEl.style.fontWeight = w;
   document.querySelectorAll('.font-item').forEach(el => {
     el.classList.toggle('selected', el.dataset.family === family && +el.dataset.weight === weight);
   });
@@ -2244,6 +2248,8 @@ showUnderlineEl.addEventListener('change', () => {
   showUnderline = showUnderlineEl.checked;
   wordStage.classList.toggle('show-underline', showUnderline);
 });
+// Apply initial state from default-checked input.
+wordStage.classList.toggle('show-underline', showUnderlineEl.checked);
 
 // Pacing pauses
 const pauseSentenceEl   = document.getElementById('pause-sentence');
