@@ -1994,12 +1994,15 @@ function chunkEffectiveLength(chunkText) {
   return charCount + Math.max(0, wordCount - 1);
 }
 
-function chunkComplexitySlowdown(chunkText) {
+// Single source of truth for the complexity slowdown curve. Takes an
+// effective length (chars + word-bonus already applied if applicable) and
+// returns the per-chunk slowdown multiplier. Used by both the runtime timer
+// and the graph, so the graph cannot drift from the actual behavior.
+function complexitySlowdownMultiplierForEffectiveLength(effectiveLength) {
   if (!complexitySlowdownEnabled) return 1.0;
   if (complexityWeight <= 1.0) return 1.0;
-  const eff = chunkEffectiveLength(chunkText);
-  if (eff <= 0) return 1.0;
-  const ratio = eff / complexityBaseline;
+  if (effectiveLength <= 0) return 1.0;
+  const ratio = effectiveLength / complexityBaseline;
   let term;
   if (complexityInvert) {
     // Reflected curve: fast early rise that plateaus at the multiplier when
@@ -2010,6 +2013,10 @@ function chunkComplexitySlowdown(chunkText) {
     term = Math.pow(ratio, complexityCurve);
   }
   return 1.0 + (complexityWeight - 1.0) * term;
+}
+
+function chunkComplexitySlowdown(chunkText) {
+  return complexitySlowdownMultiplierForEffectiveLength(chunkEffectiveLength(chunkText));
 }
 
 function chunkPaceMultiplier(chunkText) {
@@ -2575,26 +2582,17 @@ function redrawComplexityGraph() {
     parts.push(`<line class="grid" x1="${PAD_L}" y1="${y}" x2="${W - PAD_R}" y2="${y}"/>`);
     parts.push(`<text x="${PAD_L - 2}" y="${y + 3}" text-anchor="end">${t}x</text>`);
   });
-  // Curve
-  const m = complexityWeight, z = complexityCurve;
+  // Curve — call the SAME function the runtime uses so the graph cannot drift.
+  // x-axis is "effective length" (chars + word-bonus already applied at runtime
+  // for multi-word chunks).
   const samples = 36;
   let d = '';
   for (let i = 0; i <= samples; i++) {
-    const chars = (i / samples) * X_MAX;
-    const ratio = chars / complexityBaseline;
-    let term;
-    if (complexityInvert) {
-      const t = Math.min(1, Math.max(0, ratio));
-      term = 1 - Math.pow(1 - t, z);
-    } else {
-      term = Math.pow(Math.max(0, ratio), z);
-    }
-    let slow = 1 + (m - 1) * term;
+    const eff = (i / samples) * X_MAX;
+    let slow = complexitySlowdownMultiplierForEffectiveLength(eff);
     if (!isFinite(slow)) slow = 1e6;
-    // No ceiling clamp -- let the curve exit the top of the viewBox naturally
-    // (SVG clips outside the box). Still floor at the baseline.
     const y = Math.min(H - PAD_B, yOf(slow));
-    d += (i === 0 ? 'M' : 'L') + xOf(chars).toFixed(1) + ' ' + y.toFixed(1) + ' ';
+    d += (i === 0 ? 'M' : 'L') + xOf(eff).toFixed(1) + ' ' + y.toFixed(1) + ' ';
   }
   parts.push(`<path class="curve" d="${d.trim()}"/>`);
   complexityGraphEl.innerHTML = parts.join('');
