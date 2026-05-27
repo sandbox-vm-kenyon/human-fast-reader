@@ -982,9 +982,9 @@
       <div class="slider-row">
         <label for="complexity-baseline">Belly position</label>
         <button class="nudge-btn" id="complexity-baseline-dec" type="button">&lt;</button>
-        <input type="number" id="complexity-baseline" class="num-input" min="1" max="60" step="0.5" value="10">
+        <input type="number" id="complexity-baseline" class="num-input" min="0.1" max="60" step="0.1" value="10">
         <button class="nudge-btn" id="complexity-baseline-inc" type="button">&gt;</button>
-        <span class="val range-hint">1 – 60 chars</span>
+        <span class="val range-hint">0.1 – 60 chars</span>
       </div>
       <div class="toggle-row">
         <input type="checkbox" id="complexity-extra-words" checked>
@@ -2515,7 +2515,7 @@ function onComplexityChange() {
   complexityCurveEl.value = Number.isInteger(c * 1000) ? (Number.isInteger(c * 100) ? c.toFixed(2) : c.toFixed(3)) : String(c);
   complexityCurve = c;
   let b = parseFloat(complexityBaselineEl.value);
-  if (!isFinite(b)) b = 10; b = Math.max(1, Math.min(60, b));
+  if (!isFinite(b)) b = 10; b = Math.max(0.1, Math.min(60, b));
   complexityBaselineEl.value = Number.isInteger(b * 10) ? (Number.isInteger(b) ? String(b) : b.toFixed(1)) : String(b);
   complexityBaseline = b;
   complexityExtraWords = complexityExtraWordsEl.checked;
@@ -2534,8 +2534,8 @@ document.getElementById('complexity-weight-dec').addEventListener('click', () =>
 document.getElementById('complexity-weight-inc').addEventListener('click', () => nudgeComplexityField(complexityWeightEl, +0.05, 1,  20, 2));
 document.getElementById('complexity-curve-dec').addEventListener('click',  () => nudgeComplexityField(complexityCurveEl,  -0.05, 0.05, 10, 2));
 document.getElementById('complexity-curve-inc').addEventListener('click',  () => nudgeComplexityField(complexityCurveEl,  +0.05, 0.05, 10, 2));
-document.getElementById('complexity-baseline-dec').addEventListener('click', () => nudgeComplexityField(complexityBaselineEl, -0.5, 1, 60, 1));
-document.getElementById('complexity-baseline-inc').addEventListener('click', () => nudgeComplexityField(complexityBaselineEl, +0.5, 1, 60, 1));
+document.getElementById('complexity-baseline-dec').addEventListener('click', () => nudgeComplexityField(complexityBaselineEl, -0.5, 0.1, 60, 1));
+document.getElementById('complexity-baseline-inc').addEventListener('click', () => nudgeComplexityField(complexityBaselineEl, +0.5, 0.1, 60, 1));
 
 complexitySlowdownEl.addEventListener('change', onComplexityChange);
 complexityWeightEl.addEventListener('change',   onComplexityChange);
