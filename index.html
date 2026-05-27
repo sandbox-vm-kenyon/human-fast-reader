@@ -1481,7 +1481,9 @@ function renderChunkWithOptionalCentralAlignment(chunkText) {
   // the earlier of the two middle characters via (len - 1) >> 1.
   const trimmed = chunkText.replace(/[\s\p{P}]+$/u, '');
   const effectiveLen = trimmed.length || chunkText.length;
-  const centralIdx = (effectiveLen - 1) >> 1;
+  let centralIdx = (effectiveLen - 1) >> 1;
+  // Never highlight a space: shift left to the nearest non-space character.
+  while (centralIdx > 0 && /\s/.test(chunkText[centralIdx])) centralIdx--;
   const pre  = chunkText.slice(0, centralIdx);
   const ch   = chunkText.slice(centralIdx, centralIdx + 1);
   const post = chunkText.slice(centralIdx + 1);
