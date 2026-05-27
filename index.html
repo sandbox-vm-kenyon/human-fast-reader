@@ -976,19 +976,19 @@
       <div class="slider-row">
         <label for="bezier-endpoint-y">Endpoint multiplier</label>
         <button class="nudge-btn" id="bezier-endpoint-y-dec" type="button">&lt;</button>
-        <input type="number" id="bezier-endpoint-y" class="num-input" min="1" max="10" step="0.1" value="3">
+        <input type="number" id="bezier-endpoint-y" class="num-input" min="1" max="10" step="0.1" value="2.1">
         <button class="nudge-btn" id="bezier-endpoint-y-inc" type="button">&gt;</button>
       </div>
       <div class="slider-row">
         <label for="bezier-midpoint-x">Midpoint chars</label>
         <button class="nudge-btn" id="bezier-midpoint-x-dec" type="button">&lt;</button>
-        <input type="number" id="bezier-midpoint-x" class="num-input" min="1" max="60" step="1" value="15">
+        <input type="number" id="bezier-midpoint-x" class="num-input" min="1" max="60" step="1" value="5">
         <button class="nudge-btn" id="bezier-midpoint-x-inc" type="button">&gt;</button>
       </div>
       <div class="slider-row">
         <label for="bezier-strength">Pull strength</label>
         <button class="nudge-btn" id="bezier-strength-dec" type="button">&lt;</button>
-        <input type="number" id="bezier-strength" class="num-input" min="-30" max="30" step="0.5" value="5">
+        <input type="number" id="bezier-strength" class="num-input" min="-30" max="30" step="0.5" value="21.5">
         <button class="nudge-btn" id="bezier-strength-inc" type="button">&gt;</button>
       </div>
       <div class="slider-row">
@@ -1000,6 +1000,10 @@
       <div class="toggle-row">
         <input type="checkbox" id="complexity-extra-words" checked>
         <label for="complexity-extra-words">Increase weight for multi-word &amp; hyphenated</label>
+      </div>
+      <div class="toggle-row">
+        <input type="checkbox" id="maintain-effective-wpm">
+        <label for="maintain-effective-wpm">Maintain effective WPM (makeup gain)</label>
       </div>
     </div>
     <svg id="complexity-graph" viewBox="0 0 160 100" aria-hidden="true">
@@ -1281,11 +1285,12 @@ let complexitySlowdownEnabled = true;
 // shifted by polar(strength, rotation). Pull rotation 90° = straight "up"
 // in proportional units (chars vs multiplier scaled by endpoint ratio).
 let bezierEndpointX = 30;
-let bezierEndpointY = 3;
-let bezierMidpointX = 15;
-let bezierStrength  = 5;
+let bezierEndpointY = 2.1;
+let bezierMidpointX = 5;
+let bezierStrength  = 21.5;
 let bezierRotationDeg = 90;
 let complexityExtraWords = true; // add (wordCount - 1) bonus for multi-word / hyphenated chunks
+let maintainEffectiveWpm = false; // compressor-style makeup gain: keep displayed WPM matching no-slowdown baseline
 
 // Page settings
 let pageSize    = 200; // words per page
@@ -2095,10 +2100,15 @@ function chunkPaceMultiplier(chunkText) {
 function scheduleFlash() {
   clearTimeout(timer);
   if (!paused && mode === 'flash') {
-    const base = wpmToMs(clampWpm(wpm));
+    let base = wpmToMs(clampWpm(wpm));
+    // Compressor-style makeup gain: divide base by the mean per-chunk
+    // multiplier so the average chunk takes base_ms and overall WPM is
+    // unchanged from the no-slowdown baseline.
+    if (maintainEffectiveWpm && cachedAvgChunkMultiplier > 0) {
+      base = base / cachedAvgChunkMultiplier;
+    }
     // Additive composition: each factor contributes (multiplier - 1) of extra
-    // delay against the base, summed. So 1.6× pacing + 2.0× complexity = 1 +
-    // 0.6 + 1.0 = 2.6× total, not 3.2×.
+    // delay against the base, summed.
     const mult = 1
       + (chunkPaceMultiplier(chunks[pos]) - 1)
       + (chunkComplexitySlowdown(chunks[pos]) - 1);
@@ -2152,24 +2162,32 @@ function setWpm(v) {
   if (!paused && mode === 'flash') { clearTimeout(timer); scheduleFlash(); }
 }
 
+// Cached mean of (pacing + complexity) per-chunk multipliers for the loaded
+// text under current settings. Used by makeup-gain to keep effective WPM
+// matching the base setting.
+let cachedAvgChunkMultiplier = 1;
+
 function updateAvgWpm() {
   const inlineEl = document.getElementById('wpm-inline-display');
   if (!chunks.length || !words.length) {
+    cachedAvgChunkMultiplier = 1;
     wpmValEl.textContent = wpm + '/—';
     if (inlineEl) inlineEl.textContent = wpm + '/— WPM';
     return;
   }
   const wordsPerChunk = words.length / chunks.length;
-  // Mean pacing multiplier across all chunks: extra delay at sentence/transition
-  // endings reduces the effective WPM proportionally.
   let multSum = 0;
   for (let i = 0; i < chunks.length; i++) {
     multSum += 1
       + (chunkPaceMultiplier(chunks[i]) - 1)
       + (chunkComplexitySlowdown(chunks[i]) - 1);
   }
-  const avgMult = multSum / chunks.length;
-  const effective = Math.round(wordsPerChunk * wpm / avgMult);
+  cachedAvgChunkMultiplier = multSum / chunks.length;
+  // When makeup gain is on, base delay is divided by avgMult, so the average
+  // chunk takes exactly base_ms — effective WPM equals the configured WPM
+  // weighted only by word grouping.
+  const effectiveDivisor = maintainEffectiveWpm ? 1 : cachedAvgChunkMultiplier;
+  const effective = Math.round(wordsPerChunk * wpm / effectiveDivisor);
   wpmValEl.textContent = wpm + '/' + effective;
   if (inlineEl) inlineEl.textContent = wpm + '/' + effective + ' WPM';
 }
@@ -2574,6 +2592,7 @@ const bezierMidpointXEl      = document.getElementById('bezier-midpoint-x');
 const bezierStrengthEl       = document.getElementById('bezier-strength');
 const bezierRotationEl       = document.getElementById('bezier-rotation');
 const complexityExtraWordsEl = document.getElementById('complexity-extra-words');
+const maintainEffectiveWpmEl = document.getElementById('maintain-effective-wpm');
 
 function applyComplexityDisabled() {
   const dis = !complexitySlowdownEnabled;
@@ -2583,6 +2602,7 @@ function applyComplexityDisabled() {
   bezierStrengthEl.disabled  = dis;
   bezierRotationEl.disabled  = dis;
   complexityExtraWordsEl.disabled = dis;
+  maintainEffectiveWpmEl.disabled = dis;
 }
 function clampField(el, min, max, fallback) {
   let v = parseFloat(el.value);
@@ -2594,11 +2614,12 @@ function clampField(el, min, max, fallback) {
 function onComplexityChange() {
   complexitySlowdownEnabled = complexitySlowdownEl.checked;
   bezierEndpointX   = clampField(bezierEndpointXEl, 5,    60,  30);
-  bezierEndpointY   = clampField(bezierEndpointYEl, 1,    10,  3);
-  bezierMidpointX   = clampField(bezierMidpointXEl, 0.1,  60,  15);
-  bezierStrength    = clampField(bezierStrengthEl, -30,   30,  5);
+  bezierEndpointY   = clampField(bezierEndpointYEl, 1,    10,  2.1);
+  bezierMidpointX   = clampField(bezierMidpointXEl, 0.1,  60,  5);
+  bezierStrength    = clampField(bezierStrengthEl, -30,   30,  21.5);
   bezierRotationDeg = clampField(bezierRotationEl, -180, 180,  90);
   complexityExtraWords = complexityExtraWordsEl.checked;
+  maintainEffectiveWpm = maintainEffectiveWpmEl.checked;
   applyComplexityDisabled();
   if (typeof redrawComplexityGraph === 'function') redrawComplexityGraph();
   updateAvgWpm();
@@ -2628,6 +2649,7 @@ bezierMidpointXEl.addEventListener('change', onComplexityChange);
 bezierStrengthEl.addEventListener('change', onComplexityChange);
 bezierRotationEl.addEventListener('change', onComplexityChange);
 complexityExtraWordsEl.addEventListener('change', onComplexityChange);
+maintainEffectiveWpmEl.addEventListener('change', onComplexityChange);
 applyComplexityDisabled();
 
 // Live graph of slowdown curve for current multiplier + exponent.
