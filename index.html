@@ -372,6 +372,11 @@
       padding: 8px 10px;
       margin: 6px 0 10px;
     }
+    .indented-child {
+      margin-left: 24px;
+      border-left: 2px solid rgba(255,255,255,.12);
+      padding-left: 10px;
+    }
     .group-ring {
       border: 1px solid rgba(255,255,255,.1);
       border-radius: var(--radius);
@@ -620,10 +625,9 @@
     <button class="profile-btn" data-profile="master">Master</button>
   </div>
 
-  <p class="section-header-plain">Multi-word grouping rules</p>
-
   <!-- Group settings (bordered cluster) -->
   <div class="grouping-cluster">
+  <p class="section-header-plain" style="margin-top:0">Multi-word grouping rules</p>
   <div class="slider-row">
     <label for="max-words">Max words shown</label>
     <input type="range" id="max-words" min="1" max="7" step="1" value="1">
@@ -648,26 +652,26 @@
     <input type="range" id="max-chars" min="1" max="50" step="1" value="12">
     <span class="val" id="max-chars-val">12</span>
   </div>
-  </div><!-- /.grouping-cluster -->
-  <div class="slider-row">
-    <label for="hyphen-thr">Word-hyphenation threshold</label>
-    <input type="range" id="hyphen-thr" min="4" max="40" step="1" value="15">
-    <span class="val" id="hyphen-val">15</span>
-  </div>
-  <div class="toggle-row">
-    <input type="checkbox" id="split-hyphens" checked>
-    <label for="split-hyphens">Split hyphenated words above char limit</label>
-  </div>
-
   <!-- Prefer grouping small words together -->
   <div class="toggle-row">
     <input type="checkbox" id="prefer-small-group" checked>
     <label for="prefer-small-group">Prefer grouping small words</label>
   </div>
   <div class="slider-row">
-    <label for="small-word-threshold">Small word threshold</label>
+    <label for="small-word-threshold">Small word size threshold</label>
     <input type="range" id="small-word-threshold" min="1" max="10" step="1" value="3">
     <span class="val" id="small-word-threshold-val">3</span>
+  </div>
+  </div><!-- /.grouping-cluster -->
+
+  <div class="toggle-row">
+    <input type="checkbox" id="split-hyphens" checked>
+    <label for="split-hyphens">Split hyphenated words above char limit</label>
+  </div>
+  <div class="slider-row indented-child">
+    <label for="hyphen-thr">Word-hyphenation threshold</label>
+    <input type="range" id="hyphen-thr" min="4" max="40" step="1" value="15">
+    <span class="val" id="hyphen-val">15</span>
   </div>
 
   <!-- Repeated-character condensing (RSVP display only) -->
