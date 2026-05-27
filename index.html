@@ -461,6 +461,7 @@
       flex: 0 0 160px; height: 100px; align-self: center;
       background: var(--surface); border-radius: 6px;
       border: 1px solid rgba(255,255,255,.08);
+      overflow: hidden; /* let curve exit top edge instead of looking clamped */
     }
     #complexity-graph.disabled { opacity: .35; }
     #complexity-graph .axis { stroke: var(--muted); stroke-width: 0.7; opacity: .5; }
@@ -952,16 +953,16 @@
       <div class="slider-row">
         <label for="complexity-weight">Multiplier</label>
         <button class="nudge-btn" id="complexity-weight-dec" type="button">&lt;</button>
-        <input type="number" id="complexity-weight" class="num-input" min="1" max="5" step="0.05" value="1.20">
+        <input type="number" id="complexity-weight" class="num-input" min="1" max="20" step="0.01" value="1.20">
         <button class="nudge-btn" id="complexity-weight-inc" type="button">&gt;</button>
-        <span class="val range-hint">1.00 – 5.00</span>
+        <span class="val range-hint">1.00 – 20.00</span>
       </div>
       <div class="slider-row">
         <label for="complexity-curve">Exponent</label>
         <button class="nudge-btn" id="complexity-curve-dec" type="button">&lt;</button>
-        <input type="number" id="complexity-curve" class="num-input" min="0.1" max="4" step="0.1" value="1.5">
+        <input type="number" id="complexity-curve" class="num-input" min="0.05" max="10" step="0.001" value="1.5">
         <button class="nudge-btn" id="complexity-curve-inc" type="button">&gt;</button>
-        <span class="val range-hint">0.1 – 4.0</span>
+        <span class="val range-hint">0.05 – 10.0</span>
       </div>
     </div>
     <svg id="complexity-graph" viewBox="0 0 160 100" aria-hidden="true">
@@ -2451,12 +2452,13 @@ function applyComplexityDisabled() {
 function onComplexityChange() {
   complexitySlowdownEnabled = complexitySlowdownEl.checked;
   let w = parseFloat(complexityWeightEl.value);
-  if (!isFinite(w)) w = 1; w = Math.max(1, Math.min(5, w));
-  complexityWeightEl.value = w.toFixed(2);
+  if (!isFinite(w)) w = 1; w = Math.max(1, Math.min(20, w));
+  // Preserve typed precision; only normalize when we have a "clean" 2dp value.
+  complexityWeightEl.value = Number.isInteger(w * 100) ? w.toFixed(2) : String(w);
   complexityWeight = w;
   let c = parseFloat(complexityCurveEl.value);
-  if (!isFinite(c)) c = 1; c = Math.max(0.1, Math.min(4, c));
-  complexityCurveEl.value = c.toFixed(1);
+  if (!isFinite(c)) c = 1; c = Math.max(0.05, Math.min(10, c));
+  complexityCurveEl.value = Number.isInteger(c * 1000) ? (Number.isInteger(c * 100) ? c.toFixed(2) : c.toFixed(3)) : String(c);
   complexityCurve = c;
   applyComplexityDisabled();
   if (typeof redrawComplexityGraph === 'function') redrawComplexityGraph();
@@ -2469,10 +2471,10 @@ function nudgeComplexityField(inputEl, delta, min, max, decimals) {
   inputEl.value = next.toFixed(decimals);
   onComplexityChange();
 }
-document.getElementById('complexity-weight-dec').addEventListener('click', () => nudgeComplexityField(complexityWeightEl, -0.05, 1,   5, 2));
-document.getElementById('complexity-weight-inc').addEventListener('click', () => nudgeComplexityField(complexityWeightEl, +0.05, 1,   5, 2));
-document.getElementById('complexity-curve-dec').addEventListener('click',  () => nudgeComplexityField(complexityCurveEl,  -0.1,  0.1, 4, 1));
-document.getElementById('complexity-curve-inc').addEventListener('click',  () => nudgeComplexityField(complexityCurveEl,  +0.1,  0.1, 4, 1));
+document.getElementById('complexity-weight-dec').addEventListener('click', () => nudgeComplexityField(complexityWeightEl, -0.05, 1,  20, 2));
+document.getElementById('complexity-weight-inc').addEventListener('click', () => nudgeComplexityField(complexityWeightEl, +0.05, 1,  20, 2));
+document.getElementById('complexity-curve-dec').addEventListener('click',  () => nudgeComplexityField(complexityCurveEl,  -0.05, 0.05, 10, 2));
+document.getElementById('complexity-curve-inc').addEventListener('click',  () => nudgeComplexityField(complexityCurveEl,  +0.05, 0.05, 10, 2));
 
 complexitySlowdownEl.addEventListener('change', onComplexityChange);
 complexityWeightEl.addEventListener('change',   onComplexityChange);
@@ -2516,8 +2518,10 @@ function redrawComplexityGraph() {
     const chars = (i / samples) * X_MAX;
     const ratio = chars / COMPLEXITY_BASELINE;
     let slow = 1 + (m - 1) * Math.pow(Math.max(0, ratio), z);
-    if (!isFinite(slow)) slow = Y_MAX;
-    const y = Math.max(PAD_T, Math.min(H - PAD_B, yOf(slow)));
+    if (!isFinite(slow)) slow = 1e6;
+    // No ceiling clamp -- let the curve exit the top of the viewBox naturally
+    // (SVG clips outside the box). Still floor at the baseline.
+    const y = Math.min(H - PAD_B, yOf(slow));
     d += (i === 0 ? 'M' : 'L') + xOf(chars).toFixed(1) + ' ' + y.toFixed(1) + ' ';
   }
   parts.push(`<path class="curve" d="${d.trim()}"/>`);
