@@ -1614,14 +1614,21 @@ function renderChunkWithOptionalCentralAlignment(chunkText) {
     wordDisplay.textContent = chunkText;
     return;
   }
-  // Strip trailing punctuation/whitespace so e.g. "when." centers on 'h' (the
-  // central char of "when") rather than on 'e'. For even-length words choose
-  // the earlier of the two middle characters via (len - 1) >> 1.
-  const trimmed = chunkText.replace(/[\s\p{P}]+$/u, '');
-  const effectiveLen = trimmed.length || chunkText.length;
-  let centralIdx = (effectiveLen - 1) >> 1;
-  // Never highlight a space: shift left to the nearest non-space character.
-  while (centralIdx > 0 && /\s/.test(chunkText[centralIdx])) centralIdx--;
+  // Pick the central character among letters/digits only — apostrophes,
+  // spaces, and other punctuation are ignored when deciding the center.
+  // e.g. "I've" → 'v' (not the apostrophe), "when." → 'h' (not '.').
+  // For even letter counts choose the earlier of the two middles.
+  const effectiveEnd = chunkText.replace(/[\s\p{P}]+$/u, '').length || chunkText.length;
+  const letterPositions = [];
+  for (let i = 0; i < effectiveEnd; i++) {
+    if (/[\p{L}\p{N}]/u.test(chunkText[i])) letterPositions.push(i);
+  }
+  let centralIdx;
+  if (letterPositions.length) {
+    centralIdx = letterPositions[(letterPositions.length - 1) >> 1];
+  } else {
+    centralIdx = (effectiveEnd - 1) >> 1;
+  }
   const pre  = chunkText.slice(0, centralIdx);
   const ch   = chunkText.slice(centralIdx, centralIdx + 1);
   const post = chunkText.slice(centralIdx + 1);
