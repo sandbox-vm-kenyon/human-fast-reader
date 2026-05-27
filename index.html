@@ -968,25 +968,34 @@
         <button type="button" class="help-pill" id="btn-complexity-help" aria-label="About complexity slowdown">?</button>
       </div>
       <div class="slider-row">
-        <label for="complexity-weight">Multiplier</label>
-        <button class="nudge-btn" id="complexity-weight-dec" type="button">&lt;</button>
-        <input type="number" id="complexity-weight" class="num-input" min="1" max="20" step="0.01" value="2.00">
-        <button class="nudge-btn" id="complexity-weight-inc" type="button">&gt;</button>
-        <span class="val range-hint">1.00 – 20.00</span>
+        <label for="bezier-endpoint-x">Endpoint chars</label>
+        <button class="nudge-btn" id="bezier-endpoint-x-dec" type="button">&lt;</button>
+        <input type="number" id="bezier-endpoint-x" class="num-input" min="5" max="60" step="1" value="30">
+        <button class="nudge-btn" id="bezier-endpoint-x-inc" type="button">&gt;</button>
       </div>
       <div class="slider-row">
-        <label for="complexity-curve">Exponent</label>
-        <button class="nudge-btn" id="complexity-curve-dec" type="button">&lt;</button>
-        <input type="number" id="complexity-curve" class="num-input" min="0.05" max="10" step="0.001" value="1.5">
-        <button class="nudge-btn" id="complexity-curve-inc" type="button">&gt;</button>
-        <span class="val range-hint">0.05 – 10.0</span>
+        <label for="bezier-endpoint-y">Endpoint multiplier</label>
+        <button class="nudge-btn" id="bezier-endpoint-y-dec" type="button">&lt;</button>
+        <input type="number" id="bezier-endpoint-y" class="num-input" min="1" max="10" step="0.1" value="3">
+        <button class="nudge-btn" id="bezier-endpoint-y-inc" type="button">&gt;</button>
       </div>
       <div class="slider-row">
-        <label for="complexity-scaler">Scaler</label>
-        <button class="nudge-btn" id="complexity-scaler-dec" type="button">&lt;</button>
-        <input type="number" id="complexity-scaler" class="num-input" min="0.5" max="30" step="0.5" value="6">
-        <button class="nudge-btn" id="complexity-scaler-inc" type="button">&gt;</button>
-        <span class="val range-hint">chars per multiplier unit</span>
+        <label for="bezier-midpoint-x">Midpoint chars</label>
+        <button class="nudge-btn" id="bezier-midpoint-x-dec" type="button">&lt;</button>
+        <input type="number" id="bezier-midpoint-x" class="num-input" min="1" max="60" step="1" value="15">
+        <button class="nudge-btn" id="bezier-midpoint-x-inc" type="button">&gt;</button>
+      </div>
+      <div class="slider-row">
+        <label for="bezier-strength">Pull strength</label>
+        <button class="nudge-btn" id="bezier-strength-dec" type="button">&lt;</button>
+        <input type="number" id="bezier-strength" class="num-input" min="0" max="30" step="0.5" value="5">
+        <button class="nudge-btn" id="bezier-strength-inc" type="button">&gt;</button>
+      </div>
+      <div class="slider-row">
+        <label for="bezier-rotation">Pull rotation°</label>
+        <button class="nudge-btn" id="bezier-rotation-dec" type="button">&lt;</button>
+        <input type="number" id="bezier-rotation" class="num-input" min="-180" max="180" step="5" value="90">
+        <button class="nudge-btn" id="bezier-rotation-inc" type="button">&gt;</button>
       </div>
       <div class="toggle-row">
         <input type="checkbox" id="complexity-extra-words" checked>
@@ -1099,40 +1108,33 @@
     <h3>What it does</h3>
     <ul>
       <li>Bigger / busier chunk → longer display time.</li>
+      <li>Shape is a quadratic Bezier from (0, 1×) to (Endpoint chars, Endpoint multiplier).</li>
       <li>Adds to (not multiplies with) the punctuation pacing pause.</li>
     </ul>
 
-    <h3>Multiplier</h3>
+    <h3>Endpoint chars / multiplier</h3>
     <ul>
-      <li>Slowdown reaches this value at the anchor (anchor = scaler × multiplier chars).</li>
-      <li><code>1.00</code> = off.</li>
+      <li>End of the curve — where slowdown reaches the endpoint multiplier value.</li>
+      <li>Past the endpoint, slowdown extrapolates linearly along the tangent.</li>
     </ul>
 
-    <h3>Scaler</h3>
+    <h3>Midpoint chars</h3>
     <ul>
-      <li>Chars per multiplier unit. Default <code>6</code> → 5× at 30 chars when linear.</li>
-      <li>Higher = curve spreads out over more chars; lower = much sooner.</li>
+      <li>X anchor for the control point. Defaults to half the endpoint.</li>
+      <li>Move it left/right to shift where the curve bends.</li>
     </ul>
 
-    <h3>Exponent (curve shape)</h3>
+    <h3>Pull strength / rotation</h3>
     <ul>
-      <li><code>= 1</code> linear.</li>
-      <li><code>&gt; 1</code> curves up — outliers feel it more.</li>
-      <li><code>&lt; 1</code> curves down — fast early, then plateaus.</li>
+      <li>Polar offset of the control point away from the midpoint anchor.</li>
+      <li>Rotation 90° pulls "up" (concave up); −90° pulls "down" (concave down); 0°/180° slide the bend horizontally.</li>
+      <li>Strength 0 = straight line from start to endpoint.</li>
     </ul>
 
     <h3>Effective length</h3>
     <ul>
       <li>Characters + (extra-words bonus, when toggled on).</li>
       <li>Hyphens count as chars and as word splitters.</li>
-    </ul>
-
-    <h3>Try these</h3>
-    <ul>
-      <li><strong>Default</strong> — <code>1.20 × 1.5</code> · slight curve up.</li>
-      <li><strong>Linear</strong> — <code>1.80 × 1.0</code> · proportional.</li>
-      <li><strong>Square-root growth</strong> — multiplier <code>2.0</code>, scaler <code>6</code>, exponent <code>0.5</code> · fast early, keeps climbing slowly.</li>
-      <li><strong>Outlier-focused</strong> — <code>1.20 × 2.5</code> · short chunks untouched, long ones heavily penalized.</li>
     </ul>
   </div>
 </div>
@@ -1275,9 +1277,14 @@ let transitionMult   = 1.60;
 // Multiplier semantics match pacing: 1.0 = no change; higher = more slowdown
 // at the high end. Formula: slowdown = 1 + (multiplier - 1) * (eff/baseline)^curve
 let complexitySlowdownEnabled = true;
-let complexityWeight   = 2.00;  // slowdown value reached at the anchor (eff = scaler * multiplier)
-let complexityCurve    = 1.5;
-let complexityScaler   = 6;     // chars per multiplier unit; anchor x = scaler * multiplier
+// Quadratic Bezier shape: P0=(0,1), P2=(endpointX, endpointY), P1 = midpoint
+// shifted by polar(strength, rotation). Pull rotation 90° = straight "up"
+// in proportional units (chars vs multiplier scaled by endpoint ratio).
+let bezierEndpointX = 30;
+let bezierEndpointY = 3;
+let bezierMidpointX = 15;
+let bezierStrength  = 5;
+let bezierRotationDeg = 90;
 let complexityExtraWords = true; // add (wordCount - 1) bonus for multi-word / hyphenated chunks
 
 // Page settings
@@ -2013,16 +2020,60 @@ function chunkEffectiveLength(chunkText) {
 // effective length (chars + word-bonus already applied if applicable) and
 // returns the per-chunk slowdown multiplier. Used by both the runtime timer
 // and the graph, so the graph cannot drift from the actual behavior.
+// Compute the control point P1 from midpoint + polar(strength, rotation).
+// Polar offset uses chars-equivalent units: y-offset is converted to multiplier
+// units using the endpoint's chars-per-multiplier-unit ratio so the visual
+// "rotation" stays geometrically meaningful in the (chars, slowdown) plane.
+function computeBezierControlPoint() {
+  const p0x = 0, p0y = 1;
+  const p2x = bezierEndpointX, p2y = Math.max(1, bezierEndpointY);
+  const mx  = bezierMidpointX;
+  // y on the straight line from P0 to P2 at x = mx
+  const baseY = p0y + (p2y - p0y) * (p2x === 0 ? 0 : mx / p2x);
+  const charsPerMult = (p2y - p0y) > 0 ? (p2x / (p2y - p0y)) : 6;
+  const rad = bezierRotationDeg * Math.PI / 180;
+  const offX = bezierStrength * Math.cos(rad);
+  const offY = (bezierStrength * Math.sin(rad)) / charsPerMult; // convert chars-of-offset to multiplier units
+  return { p0x, p0y, p1x: mx + offX, p1y: baseY + offY, p2x, p2y };
+}
+
+function solveBezierTForX(targetX, p0x, p1x, p2x) {
+  // (1-t)^2 p0x + 2(1-t)t p1x + t^2 p2x = targetX
+  // => a t^2 + b t + c = 0 with:
+  const a = p0x - 2 * p1x + p2x;
+  const b = 2 * (p1x - p0x);
+  const c = p0x - targetX;
+  if (Math.abs(a) < 1e-9) {
+    // Linear in t
+    if (Math.abs(b) < 1e-9) return 0;
+    return -c / b;
+  }
+  const disc = b * b - 4 * a * c;
+  if (disc < 0) return 0;
+  const sd = Math.sqrt(disc);
+  const t1 = (-b + sd) / (2 * a);
+  const t2 = (-b - sd) / (2 * a);
+  if (t1 >= 0 && t1 <= 1) return t1;
+  if (t2 >= 0 && t2 <= 1) return t2;
+  // Pick the closer one
+  return Math.max(0, Math.min(1, Math.abs(t1) < Math.abs(t2 - 1) ? t1 : t2));
+}
+
 function complexitySlowdownMultiplierForEffectiveLength(effectiveLength) {
   if (!complexitySlowdownEnabled) return 1.0;
-  if (complexityWeight <= 1.0) return 1.0;
   if (effectiveLength <= 0) return 1.0;
-  // Anchor x = scaler * multiplier (chars at which slowdown reaches the multiplier).
-  // So scaler is the chars-per-multiplier-unit ratio (e.g. 6 → 5× at 30 chars).
-  const anchor = complexityScaler * complexityWeight;
-  const ratio = effectiveLength / anchor;
-  const term = Math.pow(Math.max(0, ratio), complexityCurve);
-  return 1.0 + (complexityWeight - 1.0) * term;
+  const cp = computeBezierControlPoint();
+  if (effectiveLength >= cp.p2x) {
+    // Linear extrapolation past endpoint using tangent at t=1: 2*(P2 - P1)
+    const dx = cp.p2x - cp.p1x;
+    const dy = cp.p2y - cp.p1y;
+    const slope = Math.abs(dx) < 1e-9 ? 0 : dy / dx;
+    return Math.max(1, cp.p2y + (effectiveLength - cp.p2x) * slope);
+  }
+  const t = solveBezierTForX(effectiveLength, cp.p0x, cp.p1x, cp.p2x);
+  const omt = 1 - t;
+  const y = omt * omt * cp.p0y + 2 * omt * t * cp.p1y + t * t * cp.p2y;
+  return Math.max(1, y);
 }
 
 function chunkComplexitySlowdown(chunkText) {
@@ -2515,56 +2566,67 @@ showUnderlineEl.addEventListener('change', () => {
 // Apply initial state from default-checked input.
 wordStage.classList.toggle('show-underline', showUnderlineEl.checked);
 
-// Complexity slowdown
-const complexitySlowdownEl = document.getElementById('complexity-slowdown');
-const complexityWeightEl   = document.getElementById('complexity-weight');
-const complexityCurveEl    = document.getElementById('complexity-curve');
-const complexityScalerEl = document.getElementById('complexity-scaler');
+// Complexity slowdown — Bezier shape controls
+const complexitySlowdownEl   = document.getElementById('complexity-slowdown');
+const bezierEndpointXEl      = document.getElementById('bezier-endpoint-x');
+const bezierEndpointYEl      = document.getElementById('bezier-endpoint-y');
+const bezierMidpointXEl      = document.getElementById('bezier-midpoint-x');
+const bezierStrengthEl       = document.getElementById('bezier-strength');
+const bezierRotationEl       = document.getElementById('bezier-rotation');
 const complexityExtraWordsEl = document.getElementById('complexity-extra-words');
+
 function applyComplexityDisabled() {
-  complexityWeightEl.disabled   = !complexitySlowdownEnabled;
-  complexityCurveEl.disabled    = !complexitySlowdownEnabled;
-  complexityScalerEl.disabled = !complexitySlowdownEnabled;
-  complexityExtraWordsEl.disabled = !complexitySlowdownEnabled;
+  const dis = !complexitySlowdownEnabled;
+  bezierEndpointXEl.disabled = dis;
+  bezierEndpointYEl.disabled = dis;
+  bezierMidpointXEl.disabled = dis;
+  bezierStrengthEl.disabled  = dis;
+  bezierRotationEl.disabled  = dis;
+  complexityExtraWordsEl.disabled = dis;
+}
+function clampField(el, min, max, fallback) {
+  let v = parseFloat(el.value);
+  if (!isFinite(v)) v = fallback;
+  v = Math.max(min, Math.min(max, v));
+  el.value = String(v);
+  return v;
 }
 function onComplexityChange() {
   complexitySlowdownEnabled = complexitySlowdownEl.checked;
-  let w = parseFloat(complexityWeightEl.value);
-  if (!isFinite(w)) w = 1; w = Math.max(1, Math.min(20, w));
-  // Preserve typed precision; only normalize when we have a "clean" 2dp value.
-  complexityWeightEl.value = Number.isInteger(w * 100) ? w.toFixed(2) : String(w);
-  complexityWeight = w;
-  let c = parseFloat(complexityCurveEl.value);
-  if (!isFinite(c)) c = 1; c = Math.max(0.05, Math.min(10, c));
-  complexityCurveEl.value = Number.isInteger(c * 1000) ? (Number.isInteger(c * 100) ? c.toFixed(2) : c.toFixed(3)) : String(c);
-  complexityCurve = c;
-  let s = parseFloat(complexityScalerEl.value);
-  if (!isFinite(s)) s = 6; s = Math.max(0.5, Math.min(30, s));
-  complexityScalerEl.value = Number.isInteger(s * 10) ? (Number.isInteger(s) ? String(s) : s.toFixed(1)) : String(s);
-  complexityScaler = s;
+  bezierEndpointX   = clampField(bezierEndpointXEl, 5,    60,  30);
+  bezierEndpointY   = clampField(bezierEndpointYEl, 1,    10,  3);
+  bezierMidpointX   = clampField(bezierMidpointXEl, 0.1,  60,  15);
+  bezierStrength    = clampField(bezierStrengthEl,  0,    30,  5);
+  bezierRotationDeg = clampField(bezierRotationEl, -180, 180,  90);
   complexityExtraWords = complexityExtraWordsEl.checked;
   applyComplexityDisabled();
   if (typeof redrawComplexityGraph === 'function') redrawComplexityGraph();
   updateAvgWpm();
   if (!paused && mode === 'flash') { clearTimeout(timer); scheduleFlash(); }
 }
-function nudgeComplexityField(inputEl, delta, min, max, decimals) {
+function nudgeComplexityField(inputEl, delta, min, max) {
   const cur = parseFloat(inputEl.value);
   const next = Math.max(min, Math.min(max, (isFinite(cur) ? cur : min) + delta));
-  inputEl.value = next.toFixed(decimals);
+  inputEl.value = String(next);
   onComplexityChange();
 }
-document.getElementById('complexity-weight-dec').addEventListener('click', () => nudgeComplexityField(complexityWeightEl, -0.05, 1,  20, 2));
-document.getElementById('complexity-weight-inc').addEventListener('click', () => nudgeComplexityField(complexityWeightEl, +0.05, 1,  20, 2));
-document.getElementById('complexity-curve-dec').addEventListener('click',  () => nudgeComplexityField(complexityCurveEl,  -0.05, 0.05, 10, 2));
-document.getElementById('complexity-curve-inc').addEventListener('click',  () => nudgeComplexityField(complexityCurveEl,  +0.05, 0.05, 10, 2));
+document.getElementById('bezier-endpoint-x-dec').addEventListener('click', () => nudgeComplexityField(bezierEndpointXEl, -1, 5, 60));
+document.getElementById('bezier-endpoint-x-inc').addEventListener('click', () => nudgeComplexityField(bezierEndpointXEl, +1, 5, 60));
+document.getElementById('bezier-endpoint-y-dec').addEventListener('click', () => nudgeComplexityField(bezierEndpointYEl, -0.1, 1, 10));
+document.getElementById('bezier-endpoint-y-inc').addEventListener('click', () => nudgeComplexityField(bezierEndpointYEl, +0.1, 1, 10));
+document.getElementById('bezier-midpoint-x-dec').addEventListener('click', () => nudgeComplexityField(bezierMidpointXEl, -1, 0.1, 60));
+document.getElementById('bezier-midpoint-x-inc').addEventListener('click', () => nudgeComplexityField(bezierMidpointXEl, +1, 0.1, 60));
+document.getElementById('bezier-strength-dec').addEventListener('click', () => nudgeComplexityField(bezierStrengthEl, -0.5, 0, 30));
+document.getElementById('bezier-strength-inc').addEventListener('click', () => nudgeComplexityField(bezierStrengthEl, +0.5, 0, 30));
+document.getElementById('bezier-rotation-dec').addEventListener('click', () => nudgeComplexityField(bezierRotationEl, -5, -180, 180));
+document.getElementById('bezier-rotation-inc').addEventListener('click', () => nudgeComplexityField(bezierRotationEl, +5, -180, 180));
 
 complexitySlowdownEl.addEventListener('change', onComplexityChange);
-complexityWeightEl.addEventListener('change',   onComplexityChange);
-complexityCurveEl.addEventListener('change',    onComplexityChange);
-complexityScalerEl.addEventListener('change', onComplexityChange);
-document.getElementById('complexity-scaler-dec').addEventListener('click', () => nudgeComplexityField(complexityScalerEl, -0.5, 0.5, 30, 1));
-document.getElementById('complexity-scaler-inc').addEventListener('click', () => nudgeComplexityField(complexityScalerEl, +0.5, 0.5, 30, 1));
+bezierEndpointXEl.addEventListener('change', onComplexityChange);
+bezierEndpointYEl.addEventListener('change', onComplexityChange);
+bezierMidpointXEl.addEventListener('change', onComplexityChange);
+bezierStrengthEl.addEventListener('change', onComplexityChange);
+bezierRotationEl.addEventListener('change', onComplexityChange);
 complexityExtraWordsEl.addEventListener('change', onComplexityChange);
 applyComplexityDisabled();
 
@@ -2578,7 +2640,7 @@ function redrawComplexityGraph() {
   const W = 160, H = 100;
   const plotW = W - PAD_L - PAD_R;
   const plotH = H - PAD_T - PAD_B;
-  const X_MAX = 35, Y_MIN = 1, Y_MAX = 5;
+  const X_MAX = 35, Y_MIN = 1, Y_MAX = 3;
   const xOf = (chars) => PAD_L + (chars / X_MAX) * plotW;
   const yOf = (slow)  => PAD_T + (1 - (slow - Y_MIN) / (Y_MAX - Y_MIN)) * plotH;
 
@@ -2597,13 +2659,13 @@ function redrawComplexityGraph() {
     parts.push(`<line class="grid" x1="${x}" y1="${PAD_T}" x2="${x}" y2="${H - PAD_B}"/>`);
     parts.push(`<text x="${x}" y="${H - 2}" text-anchor="middle">${t}</text>`);
   });
-  // Y minor gridlines at every 0.5 between 1 and 5 (skip the major ones)
-  [1.5, 2.5, 3.5, 4.5].forEach(t => {
+  // Y minor gridlines at every 0.5 between 1 and 3 (skip the major ones)
+  [1.25, 1.5, 1.75, 2.25, 2.5, 2.75].forEach(t => {
     const y = yOf(t);
     parts.push(`<line class="grid-minor" x1="${PAD_L}" y1="${y}" x2="${W - PAD_R}" y2="${y}"/>`);
   });
   // Y major gridlines + labels at integers
-  [1, 2, 3, 4, 5].forEach(t => {
+  [1, 2, 3].forEach(t => {
     const y = yOf(t);
     parts.push(`<line class="grid" x1="${PAD_L}" y1="${y}" x2="${W - PAD_R}" y2="${y}"/>`);
     parts.push(`<text x="${PAD_L - 2}" y="${y + 3}" text-anchor="end">${t}x</text>`);
