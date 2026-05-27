@@ -621,33 +621,32 @@
 
   <!-- Group settings -->
   <div class="slider-row">
-    <label for="max-words">Max words</label>
+    <label for="max-words">Max words shown</label>
     <input type="range" id="max-words" min="1" max="7" step="1" value="1">
     <span class="val" id="max-words-val">1</span>
   </div>
+  <!-- Prevent grouping across punctuation boundaries -->
+  <div class="toggle-row">
+    <input type="checkbox" id="no-cross-sentence" checked>
+    <label for="no-cross-sentence">Prevent grouping across "! / . / ?"</label>
+  </div>
+  <div class="toggle-row">
+    <input type="checkbox" id="no-cross-transition" checked>
+    <label for="no-cross-transition">Prevent grouping across ", / ; / : / -"</label>
+  </div>
   <div class="slider-row">
-    <label for="max-chars">Max chars</label>
+    <label for="max-chars">Max multi-word char count</label>
     <input type="range" id="max-chars" min="1" max="50" step="1" value="12">
     <span class="val" id="max-chars-val">12</span>
   </div>
   <div class="slider-row">
-    <label for="hyphen-thr">Hyphen at</label>
+    <label for="hyphen-thr">Word-hyphenation threshold</label>
     <input type="range" id="hyphen-thr" min="4" max="40" step="1" value="15">
     <span class="val" id="hyphen-val">15</span>
   </div>
   <div class="toggle-row">
     <input type="checkbox" id="split-hyphens" checked>
     <label for="split-hyphens">Split hyphenated words above char limit</label>
-  </div>
-
-  <!-- Do not group across punctuation boundaries -->
-  <div class="toggle-row">
-    <input type="checkbox" id="no-cross-sentence" checked>
-    <label for="no-cross-sentence">Do not group across "! / . / ?"</label>
-  </div>
-  <div class="toggle-row">
-    <input type="checkbox" id="no-cross-transition" checked>
-    <label for="no-cross-transition">Do not group across ", / ; / : / -"</label>
   </div>
 
   <!-- Repeated-character condensing (RSVP display only) -->
