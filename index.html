@@ -892,13 +892,16 @@
     <label for="complexity-slowdown">Complexity slowdown factor</label>
   </div>
   <div class="slider-row indented-child">
-    <label for="complexity-weight">Slowdown weight</label>
-    <input type="number" id="complexity-weight" class="num-input" min="0" max="2" step="0.05" value="0.20">
+    <label for="complexity-weight">Slowdown multiplier</label>
+    <input type="number" id="complexity-weight" class="num-input" min="1" max="5" step="0.05" value="1.20">
   </div>
   <div class="slider-row indented-child">
     <label for="complexity-curve">Slowdown curve</label>
     <input type="number" id="complexity-curve" class="num-input" min="1" max="4" step="0.1" value="2.5">
   </div>
+  <p class="slider-note indented-child" style="margin-top:2px">
+    Useful: multiplier 1.00 (off) – 1.40 (strong); curve 1.5 (near linear) – 3.0 (steeply penalizes long chunks). Default 1.20 × 2.5 ≈ 3× for a 25-char outlier; ~1× for short chunks.
+  </p>
 
   <!-- Underline beneath the reading panel -->
   <div class="toggle-row">
@@ -1126,10 +1129,10 @@ let pauseTransition  = false;
 let transitionMult   = 1.60;
 
 // Complexity slowdown — longer / more-word chunks get extra display time.
-// slowdown = 1 + weight * (effectiveLength / baseline) ^ curve, applied
-// multiplicatively to the per-chunk delay alongside punctuation pacing.
+// Multiplier semantics match pacing: 1.0 = no change; higher = more slowdown
+// at the high end. Formula: slowdown = 1 + (multiplier - 1) * (eff/baseline)^curve
 let complexitySlowdownEnabled = true;
-let complexityWeight   = 0.20;  // ~3x at 25 effective chars with curve 2.5, baseline 10
+let complexityWeight   = 1.20;  // ~3x at 25 effective chars with curve 2.5, baseline 10
 let complexityCurve    = 2.5;
 const COMPLEXITY_BASELINE = 10; // internal; "typical" effective chunk length
 
@@ -1863,10 +1866,11 @@ function chunkEffectiveLength(chunkText) {
 
 function chunkComplexitySlowdown(chunkText) {
   if (!complexitySlowdownEnabled) return 1.0;
+  if (complexityWeight <= 1.0) return 1.0;
   const eff = chunkEffectiveLength(chunkText);
   if (eff <= 0) return 1.0;
   const ratio = eff / COMPLEXITY_BASELINE;
-  return 1.0 + complexityWeight * Math.pow(ratio, complexityCurve);
+  return 1.0 + (complexityWeight - 1.0) * Math.pow(ratio, complexityCurve);
 }
 
 function chunkPaceMultiplier(chunkText) {
@@ -2345,7 +2349,7 @@ function applyComplexityDisabled() {
 function onComplexityChange() {
   complexitySlowdownEnabled = complexitySlowdownEl.checked;
   let w = parseFloat(complexityWeightEl.value);
-  if (!isFinite(w)) w = 0; w = Math.max(0, Math.min(2, w));
+  if (!isFinite(w)) w = 1; w = Math.max(1, Math.min(5, w));
   complexityWeightEl.value = w.toFixed(2);
   complexityWeight = w;
   let c = parseFloat(complexityCurveEl.value);
