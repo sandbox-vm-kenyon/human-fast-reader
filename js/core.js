@@ -3,6 +3,86 @@
  * No DOM, no side-effects. All functions are pure.
  */
 
+// ══════════════════════════════════════════════
+//  Shared punctuation definitions
+//  Single source of truth used by:
+//    - sentence-start replay
+//    - sentence-ending / transition pacing pauses
+//    - "Do not group across" grouping rules
+// ══════════════════════════════════════════════
+
+/** Sentence-ending punctuation characters: . ! ? */
+const SENTENCE_END_RE = /[.!?]/;
+
+/** Transition punctuation characters: , ; : */
+const TRANSITION_RE = /[,;:]/;
+
+/** Boundary dash characters — en dash, em dash. Always grouping boundaries. */
+const BOUNDARY_DASH_RE = /[–—]/;
+
+/** Trailing-side characters that may follow sentence-end punctuation (quotes, brackets). */
+const TRAILING_CLOSER_RE = /["'”’\)\]\}]/;
+
+/**
+ * True if `token` ends a sentence — last non-closer character matches SENTENCE_END_RE.
+ * Tolerates trailing closing quotes/brackets like  he said." or  done!).
+ * @param {string} token
+ * @returns {boolean}
+ */
+function endsSentence(token) {
+  if (!token) return false;
+  let i = token.length - 1;
+  while (i >= 0 && TRAILING_CLOSER_RE.test(token[i])) i--;
+  if (i < 0) return false;
+  return SENTENCE_END_RE.test(token[i]);
+}
+
+/**
+ * True if `token` ends a transition — trailing transition punctuation,
+ * a standalone boundary dash token (e.g. "—" or "-"), or ends with em/en dash.
+ * Does NOT treat intra-word hyphen as a transition.
+ * @param {string} token
+ * @returns {boolean}
+ */
+function endsTransition(token) {
+  if (!token) return false;
+  if (token === '-' || token === '–' || token === '—') return true;
+  const last = token[token.length - 1];
+  if (TRANSITION_RE.test(last)) return true;
+  if (BOUNDARY_DASH_RE.test(last)) return true;
+  return false;
+}
+
+/**
+ * True if `token`, after stripping non-letter characters, has length ≤ threshold.
+ * Used by "Prefer grouping small words" preference.
+ * @param {string} token
+ * @param {number} threshold
+ * @returns {boolean}
+ */
+function isSmallWord(token, threshold) {
+  if (!token) return false;
+  const letters = token.replace(/[^\p{L}\p{N}]/gu, '');
+  return letters.length > 0 && letters.length <= threshold;
+}
+
+/**
+ * Condense any run of identical characters longer than `threshold` into `[XXXX]`
+ * — exactly 4 copies of the repeated character between square brackets.
+ * Runs of length ≤ threshold are preserved.
+ * Generalizes the older single-char-collapse behavior.
+ * @param {string} text
+ * @param {number} threshold  — runs strictly greater than this are condensed
+ * @returns {string}
+ */
+function condenseRepeatedChars(text, threshold) {
+  if (!text || threshold < 1) return text;
+  return text.replace(/(.)\1+/g, (match, ch) => {
+    if (match.length > threshold) return '[' + ch + ch + ch + ch + ']';
+    return match;
+  });
+}
+
 /** Split text into words, filtering empty strings. */
 function parseWords(text) {
   return text.split(/\s+/).filter(w => w.length > 0);
@@ -19,8 +99,10 @@ function parseWordsWithOffsets(text) {
   const re = /\S+/g;
   let m;
   while ((m = re.exec(text)) !== null) {
-    const w = /^(.)\1+$/.test(m[0]) ? m[0][0] : m[0];
-    words.push(w);
+    // Preserve original token verbatim. Repeated-character condensing for the
+    // RSVP display is applied separately in rebuildChunks() so Page mode keeps
+    // the original runs intact.
+    words.push(m[0]);
     offsets.push(m.index);
   }
   return { words, offsets };

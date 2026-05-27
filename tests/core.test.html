@@ -191,6 +191,81 @@
             assertEqual(currentWord(state), 'foo', 'third word');
         });
 
+        // ========== Shared punctuation helpers (Stage 0) ==========
+
+        test('endsSentence: period, exclamation, question mark', () => {
+            assert(endsSentence('end.'), 'period');
+            assert(endsSentence('wow!'), 'exclamation');
+            assert(endsSentence('why?'), 'question');
+        });
+
+        test('endsSentence: trailing closing quote/bracket tolerated', () => {
+            assert(endsSentence('done."'), 'period inside double-quote');
+            assert(endsSentence("done.'"), 'period inside single-quote');
+            assert(endsSentence('done.”'), 'period inside curly quote');
+            assert(endsSentence('done.)'), 'period before close paren');
+        });
+
+        test('endsSentence: false for non-sentence-ending tokens', () => {
+            assert(!endsSentence('hello'), 'plain word');
+            assert(!endsSentence('foo,'), 'comma not sentence');
+            assert(!endsSentence('bar—'), 'em-dash not sentence');
+            assert(!endsSentence(''), 'empty');
+        });
+
+        test('endsTransition: comma, semicolon, colon', () => {
+            assert(endsTransition('foo,'), 'comma');
+            assert(endsTransition('bar;'), 'semicolon');
+            assert(endsTransition('baz:'), 'colon');
+        });
+
+        test('endsTransition: standalone dashes and trailing em/en dash', () => {
+            assert(endsTransition('-'), 'standalone hyphen');
+            assert(endsTransition('—'), 'standalone em dash');
+            assert(endsTransition('–'), 'standalone en dash');
+            assert(endsTransition('word—'), 'word with trailing em dash');
+            assert(endsTransition('word–'), 'word with trailing en dash');
+        });
+
+        test('endsTransition: intra-word hyphen NOT a transition', () => {
+            assert(!endsTransition('self-aware'), 'intra-word hyphen');
+            assert(!endsTransition('multi-hyphenated-word'), 'multiple intra-word hyphens');
+        });
+
+        test('isSmallWord: letters length ≤ threshold', () => {
+            assert(isSmallWord('a', 3), 'a ≤ 3');
+            assert(isSmallWord('the', 3), 'the = 3');
+            assert(!isSmallWord('long', 3), 'long > 3');
+            assert(isSmallWord('it,', 3), 'punctuation stripped');
+            assert(!isSmallWord('', 3), 'empty not small');
+        });
+
+        test('condenseRepeatedChars: runs above threshold become [XXXX]', () => {
+            assertEqual(condenseRepeatedChars('------', 5), '[----]', '6 dashes > 5');
+            assertEqual(condenseRepeatedChars('==========', 5), '[====]', '10 equals > 5');
+            assertEqual(condenseRepeatedChars('........', 5), '[....]', '8 periods > 5');
+        });
+
+        test('condenseRepeatedChars: runs at-or-below threshold preserved', () => {
+            assertEqual(condenseRepeatedChars('-----', 5), '-----', '5 dashes = threshold');
+            assertEqual(condenseRepeatedChars('---', 5), '---', '3 dashes < threshold');
+            assertEqual(condenseRepeatedChars('abc', 5), 'abc', 'no repeats');
+        });
+
+        test('parseWordsWithOffsets: preserves repeated-char tokens verbatim (no inline collapse)', () => {
+            const parsed = parseWordsWithOffsets('hello ------ world');
+            assertArrayEqual(parsed.words, ['hello', '------', 'world'], 'words preserved');
+            assertArrayEqual(parsed.offsets, [0, 6, 13], 'offsets correct');
+        });
+
+        test('condenseRepeatedChars: mixed text condenses only long runs', () => {
+            assertEqual(
+                condenseRepeatedChars('hello------world.....foo', 4),
+                'hello[----]world[....]foo',
+                'two condensed runs in one string'
+            );
+        });
+
         // Render results
         renderResults();
     </script>

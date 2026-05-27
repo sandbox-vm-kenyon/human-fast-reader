@@ -15,8 +15,19 @@ Traditional reading is slowed by **saccades** — the eye movements your eyes ma
 Research shows trained readers can reach 600–1000 WPM with good comprehension using RSVP, compared to a typical 200–300 WPM for conventional reading.
 
 - [Wikipedia — Rapid Serial Visual Presentation](https://en.wikipedia.org/wiki/Rapid_serial_visual_presentation)
-- [Acklin & Papesh (2017) — Modern Speed-Reading Apps Do Not Foster Reading Comprehension](https://pubmed.ncbi.nlm.nih.gov/29461715/)
-- [Key-DeLyria et al. (2019) — RSVP Interacts with Ambiguity During Sentence Comprehension](https://pubmed.ncbi.nlm.nih.gov/30612265/)
+
+---
+
+### *Note on recent RSVP speed reading claims
+
+RSVP is not proven to increase comprehension, and many claimed benefits are overstated. The stronger evidence suggests that RSVP may be useful as an alternate presentation mode rather than a universal speed-reading upgrade. Interesting research shows promise around ADHD-related focus, visually limited/peripheral reading cases, and timing models that better preserve natural reading rhythm. The multi-word display settings in this app move subtly in that direction by reducing the "single-word machine-gun" effect and giving phrases more usable context.
+
+Links by topic:
+
+- General RSVP / speed-reading caution: [Acklin & Papesh (2017)](https://pubmed.ncbi.nlm.nih.gov/29461715/)
+- ADHD / attention-focused reading support: [Cambridge — Reading without eye movements: improving reading comprehension in young adults with ADHD](https://www.cambridge.org/core/journals/journal-of-the-international-neuropsychological-society/article/reading-without-eye-movements-improving-reading-comprehension-in-young-adults-with-attentiondeficithyperactivity-disorder-adhd/33851CEA7C1AC6193D088D4D5551ED3C)
+- Visual limitation / peripheral reading training: [ScienceDirect — Vision Research article](https://www.sciencedirect.com/science/article/pii/S0042698917301219)
+- Natural rhythm / phrase-aware RSVP timing: [Ferguson (Auburn, 2024)](https://bpb-us-e2.wpmucdn.com/wordpress.auburn.edu/dist/a/151/files/2024/08/Ferguson.pdf)
 
 ---
 
