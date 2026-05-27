@@ -137,6 +137,7 @@
       font-weight: 700; letter-spacing: .02em;
       white-space: nowrap;
       flex: 1;
+      min-width: 0; /* allow flex item to shrink below content width so overflow can clip */
       overflow: hidden;
     }
     #ctx-before { text-align: right; padding-right: .4em; }
@@ -619,11 +620,7 @@
     <button class="profile-btn" data-profile="master">Master</button>
   </div>
 
-  <!-- Context words toggle -->
-  <div class="toggle-row">
-    <input type="checkbox" id="ctx-toggle">
-    <label for="ctx-toggle">Show leading &amp; trailing words</label>
-  </div>
+  <p class="section-header-plain">Multi-word grouping rules</p>
 
   <!-- Group settings (bordered cluster) -->
   <div class="grouping-cluster">
@@ -682,6 +679,12 @@
     <label for="condense-threshold">Repeated character threshold</label>
     <input type="range" id="condense-threshold" min="3" max="50" step="1" value="5">
     <span class="val" id="condense-threshold-val">5</span>
+  </div>
+
+  <!-- Context words toggle (moved to bottom of advanced settings) -->
+  <div class="toggle-row">
+    <input type="checkbox" id="ctx-toggle">
+    <label for="ctx-toggle">Show leading &amp; trailing words</label>
   </div>
 </div>
 
