@@ -130,6 +130,18 @@
       position: relative; overflow: hidden;
       padding: 12px 0;
     }
+    /* Reading-position underline: a horizontal rule under the text row,
+       spanning the full width of the reading panel. */
+    #word-stage.show-underline::after {
+      content: '';
+      position: absolute;
+      left: 0; right: 0;
+      bottom: calc(50% - 0.85em);
+      height: 2px;
+      background: var(--text);
+      opacity: 0.55;
+      pointer-events: none;
+    }
     #ctx-before, #ctx-after {
       font-size: var(--word-size);
       font-family: var(--reader-font);
@@ -866,6 +878,12 @@
     <input type="checkbox" id="show-core-box" disabled>
     <label for="show-core-box">Show box around core word(s)</label>
   </div>
+
+  <!-- Underline beneath the reading panel -->
+  <div class="toggle-row">
+    <input type="checkbox" id="show-underline">
+    <label for="show-underline">Show underline</label>
+  </div>
 </div>
 
 <!-- ── Page settings ── -->
@@ -1056,6 +1074,7 @@ let singleWordMaxLength = 8;
 // Context words
 let showCtx = false;
 let showCoreBox = false;        // box around central chunk (only when showCtx)
+let showUnderline = false;      // horizontal underline beneath the RSVP panel
 let alignCentralChar = true;    // align chunk so central character is fixed at center
 let highlightCentralChar = false; // color the central character red
 
@@ -2217,6 +2236,13 @@ const highlightCentralCharEl = document.getElementById('highlight-central-char')
 highlightCentralCharEl.addEventListener('change', () => {
   highlightCentralChar = highlightCentralCharEl.checked;
   if (mode === 'flash') renderFlash();
+});
+
+// Underline beneath the reading panel
+const showUnderlineEl = document.getElementById('show-underline');
+showUnderlineEl.addEventListener('change', () => {
+  showUnderline = showUnderlineEl.checked;
+  wordStage.classList.toggle('show-underline', showUnderline);
 });
 
 // Pacing pauses
