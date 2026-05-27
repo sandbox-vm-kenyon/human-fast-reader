@@ -964,6 +964,13 @@
         <button class="nudge-btn" id="complexity-curve-inc" type="button">&gt;</button>
         <span class="val range-hint">0.05 – 10.0</span>
       </div>
+      <div class="slider-row">
+        <label for="complexity-baseline">Belly position</label>
+        <button class="nudge-btn" id="complexity-baseline-dec" type="button">&lt;</button>
+        <input type="number" id="complexity-baseline" class="num-input" min="1" max="60" step="0.5" value="10">
+        <button class="nudge-btn" id="complexity-baseline-inc" type="button">&gt;</button>
+        <span class="val range-hint">1 – 60 chars</span>
+      </div>
     </div>
     <svg id="complexity-graph" viewBox="0 0 160 100" aria-hidden="true">
       <!-- axes + ticks populated by JS -->
@@ -1237,7 +1244,7 @@ let transitionMult   = 1.60;
 let complexitySlowdownEnabled = true;
 let complexityWeight   = 1.20;  // chosen so eff=30 with z=1.5 gives ~2x slowdown
 let complexityCurve    = 1.5;
-const COMPLEXITY_BASELINE = 10; // internal; "typical" effective chunk length
+let complexityBaseline = 10;    // "belly position" — chunk length at which slowdown equals multiplier
 
 // Page settings
 let pageSize    = 200; // words per page
@@ -1972,7 +1979,7 @@ function chunkComplexitySlowdown(chunkText) {
   if (complexityWeight <= 1.0) return 1.0;
   const eff = chunkEffectiveLength(chunkText);
   if (eff <= 0) return 1.0;
-  const ratio = eff / COMPLEXITY_BASELINE;
+  const ratio = eff / complexityBaseline;
   return 1.0 + (complexityWeight - 1.0) * Math.pow(ratio, complexityCurve);
 }
 
@@ -2445,9 +2452,11 @@ wordStage.classList.toggle('show-underline', showUnderlineEl.checked);
 const complexitySlowdownEl = document.getElementById('complexity-slowdown');
 const complexityWeightEl   = document.getElementById('complexity-weight');
 const complexityCurveEl    = document.getElementById('complexity-curve');
+const complexityBaselineEl = document.getElementById('complexity-baseline');
 function applyComplexityDisabled() {
-  complexityWeightEl.disabled = !complexitySlowdownEnabled;
-  complexityCurveEl.disabled  = !complexitySlowdownEnabled;
+  complexityWeightEl.disabled   = !complexitySlowdownEnabled;
+  complexityCurveEl.disabled    = !complexitySlowdownEnabled;
+  complexityBaselineEl.disabled = !complexitySlowdownEnabled;
 }
 function onComplexityChange() {
   complexitySlowdownEnabled = complexitySlowdownEl.checked;
@@ -2460,6 +2469,10 @@ function onComplexityChange() {
   if (!isFinite(c)) c = 1; c = Math.max(0.05, Math.min(10, c));
   complexityCurveEl.value = Number.isInteger(c * 1000) ? (Number.isInteger(c * 100) ? c.toFixed(2) : c.toFixed(3)) : String(c);
   complexityCurve = c;
+  let b = parseFloat(complexityBaselineEl.value);
+  if (!isFinite(b)) b = 10; b = Math.max(1, Math.min(60, b));
+  complexityBaselineEl.value = Number.isInteger(b * 10) ? (Number.isInteger(b) ? String(b) : b.toFixed(1)) : String(b);
+  complexityBaseline = b;
   applyComplexityDisabled();
   if (typeof redrawComplexityGraph === 'function') redrawComplexityGraph();
   updateAvgWpm();
@@ -2475,10 +2488,13 @@ document.getElementById('complexity-weight-dec').addEventListener('click', () =>
 document.getElementById('complexity-weight-inc').addEventListener('click', () => nudgeComplexityField(complexityWeightEl, +0.05, 1,  20, 2));
 document.getElementById('complexity-curve-dec').addEventListener('click',  () => nudgeComplexityField(complexityCurveEl,  -0.05, 0.05, 10, 2));
 document.getElementById('complexity-curve-inc').addEventListener('click',  () => nudgeComplexityField(complexityCurveEl,  +0.05, 0.05, 10, 2));
+document.getElementById('complexity-baseline-dec').addEventListener('click', () => nudgeComplexityField(complexityBaselineEl, -0.5, 1, 60, 1));
+document.getElementById('complexity-baseline-inc').addEventListener('click', () => nudgeComplexityField(complexityBaselineEl, +0.5, 1, 60, 1));
 
 complexitySlowdownEl.addEventListener('change', onComplexityChange);
 complexityWeightEl.addEventListener('change',   onComplexityChange);
 complexityCurveEl.addEventListener('change',    onComplexityChange);
+complexityBaselineEl.addEventListener('change', onComplexityChange);
 applyComplexityDisabled();
 
 // Live graph of slowdown curve for current multiplier + exponent.
@@ -2516,7 +2532,7 @@ function redrawComplexityGraph() {
   let d = '';
   for (let i = 0; i <= samples; i++) {
     const chars = (i / samples) * X_MAX;
-    const ratio = chars / COMPLEXITY_BASELINE;
+    const ratio = chars / complexityBaseline;
     let slow = 1 + (m - 1) * Math.pow(Math.max(0, ratio), z);
     if (!isFinite(slow)) slow = 1e6;
     // No ceiling clamp -- let the curve exit the top of the viewBox naturally
