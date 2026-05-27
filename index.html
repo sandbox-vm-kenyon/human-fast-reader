@@ -329,6 +329,21 @@
     }
     .slider-row .val { font-size: .97rem; font-weight: 600; min-width: 52px; text-align: right; }
     .nudge-btn { padding: 6px 10px; font-size: .97rem; font-weight: 700; flex-shrink: 0; }
+    .num-input {
+      width: 5.5em;
+      text-align: right;
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 6px;
+      padding: 4px 6px;
+      font-family: inherit;
+      font-size: .95rem;
+      color-scheme: dark;
+    }
+    .num-input::-webkit-inner-spin-button,
+    .num-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    .num-input { -moz-appearance: textfield; }
     .slider-note { font-size: .97rem; color: var(--muted); margin: 2px 0 6px; line-height: 1.4; }
     .section-header { font-size: .97rem; color: var(--muted); text-decoration: underline; margin: 4px 0 6px; line-height: 1.4; }
     .section-header-plain { font-size: .97rem; color: var(--muted); margin: 0 0 6px; line-height: 1.4; }
@@ -746,9 +761,8 @@
   <div class="slider-row indented-child">
     <label for="sentence-mult">Sentence ending delay multiplier</label>
     <button class="nudge-btn" id="sentence-mult-dec" type="button">&lt;</button>
-    <input type="number" id="sentence-mult" min="1.00" max="10.00" step="0.05" value="1.00" style="width:5.5em;text-align:right">
+    <input type="number" id="sentence-mult" class="num-input" min="1.00" max="10.00" step="0.05" value="1.00">
     <button class="nudge-btn" id="sentence-mult-inc" type="button">&gt;</button>
-    <span class="val">×</span>
   </div>
   <div class="toggle-row">
     <input type="checkbox" id="pause-transition" checked>
@@ -757,9 +771,8 @@
   <div class="slider-row indented-child">
     <label for="transition-mult">Transition delay multiplier</label>
     <button class="nudge-btn" id="transition-mult-dec" type="button">&lt;</button>
-    <input type="number" id="transition-mult" min="1.00" max="10.00" step="0.05" value="1.00" style="width:5.5em;text-align:right">
+    <input type="number" id="transition-mult" class="num-input" min="1.00" max="10.00" step="0.05" value="1.00">
     <button class="nudge-btn" id="transition-mult-inc" type="button">&gt;</button>
-    <span class="val">×</span>
   </div>
   </div><!-- /.pacing-cluster -->
 
