@@ -859,14 +859,21 @@
     <span class="val" id="condense-threshold-val">5</span>
   </div>
 
-  <!-- Central-char alignment + red highlight (independent toggles) -->
+  <!-- Align-by-character feature -->
   <div class="toggle-row">
     <input type="checkbox" id="align-central-char" checked>
-    <label for="align-central-char">Align central char</label>
+    <label for="align-central-char">Align by character</label>
   </div>
-  <div class="toggle-row">
+  <div class="slider-row indented-child">
+    <label for="align-mode">Alignment character</label>
+    <select id="align-mode" class="num-input" style="width:auto">
+      <option value="center" selected>Center</option>
+      <option value="left">Left (first alphanumeric)</option>
+    </select>
+  </div>
+  <div class="toggle-row indented-child">
     <input type="checkbox" id="highlight-central-char" checked>
-    <label for="highlight-central-char">Highlight central char in red</label>
+    <label for="highlight-central-char">Highlight alignment char in red</label>
   </div>
 
   <!-- Context words toggle (moved to bottom of advanced settings) -->
@@ -1082,7 +1089,8 @@ let showCoreBox = false;        // box around central chunk (only when showCtx)
 let showUnderline = true;       // horizontal underline beneath the RSVP panel
 let pauseOnBlur   = true;       // pause when window loses focus / tab hidden
 let alignCentralChar = true;    // align chunk so central character is fixed at center
-let highlightCentralChar = true;  // color the central character red
+let highlightCentralChar = true;  // color the alignment character red
+let alignMode = 'center';         // 'center' (default) | 'left' (first alphanumeric)
 
 // Repeated-character condensing (RSVP display only)
 let condenseRepeats = true;
@@ -1640,9 +1648,10 @@ function renderFlash() {
 // display so the central char sits at a fixed screen position (the geometric
 // center of the word stage). Otherwise render as plain text.
 function renderChunkWithOptionalCentralAlignment(chunkText) {
-  // Highlight class is independent of layout — only requires spans to exist.
-  wordDisplay.classList.toggle('highlight-central', highlightCentralChar);
-  if (!alignCentralChar && !highlightCentralChar) {
+  // Highlight requires alignment to be on. When alignment is off, render plain.
+  const effectiveHighlight = alignCentralChar && highlightCentralChar;
+  wordDisplay.classList.toggle('highlight-central', effectiveHighlight);
+  if (!alignCentralChar) {
     wordDisplay.style.transform = '';
     ctxBefore.style.transform   = '';
     ctxAfter.style.transform    = '';
@@ -1660,7 +1669,11 @@ function renderChunkWithOptionalCentralAlignment(chunkText) {
   }
   let centralIdx;
   if (letterPositions.length) {
-    centralIdx = letterPositions[(letterPositions.length - 1) >> 1];
+    if (alignMode === 'left') {
+      centralIdx = letterPositions[0];
+    } else {
+      centralIdx = letterPositions[(letterPositions.length - 1) >> 1];
+    }
   } else {
     centralIdx = (effectiveEnd - 1) >> 1;
   }
@@ -2244,15 +2257,26 @@ showCoreBoxEl.addEventListener('change', () => {
   showCoreBox = showCoreBoxEl.checked;
   applyCoreBoxClass();
 });
+const highlightCentralCharEl = document.getElementById('highlight-central-char');
+const alignModeEl = document.getElementById('align-mode');
+function applyAlignChildDisabled() {
+  highlightCentralCharEl.disabled = !alignCentralChar;
+  alignModeEl.disabled            = !alignCentralChar;
+}
 alignCentralCharEl.addEventListener('change', () => {
   alignCentralChar = alignCentralCharEl.checked;
+  applyAlignChildDisabled();
   if (mode === 'flash') renderFlash();
 });
-const highlightCentralCharEl = document.getElementById('highlight-central-char');
 highlightCentralCharEl.addEventListener('change', () => {
   highlightCentralChar = highlightCentralCharEl.checked;
   if (mode === 'flash') renderFlash();
 });
+alignModeEl.addEventListener('change', () => {
+  alignMode = alignModeEl.value;
+  if (mode === 'flash') renderFlash();
+});
+applyAlignChildDisabled();
 
 // Underline beneath the reading panel
 const showUnderlineEl = document.getElementById('show-underline');
