@@ -163,7 +163,7 @@
       flex-shrink: 0;
       will-change: transform;
     }
-    #word-display .word-central { color: #ff5252; }
+    #word-display.highlight-central .word-central { color: #ff5252; }
     #word-display.show-core-box {
       outline: 2px solid rgba(255,255,255,.35);
       outline-offset: 4px;
@@ -344,6 +344,7 @@
     .num-input::-webkit-inner-spin-button,
     .num-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     .num-input { -moz-appearance: textfield; }
+    .num-input:disabled, .nudge-btn:disabled { opacity: 0.4; cursor: not-allowed; }
     .slider-note { font-size: .97rem; color: var(--muted); margin: 2px 0 6px; line-height: 1.4; }
     .section-header { font-size: .97rem; color: var(--muted); text-decoration: underline; margin: 4px 0 6px; line-height: 1.4; }
     .section-header-plain { font-size: .97rem; color: var(--muted); margin: 0 0 6px; line-height: 1.4; }
@@ -382,11 +383,20 @@
     /* ─────── Font panel ─────── */
     #font-panel {
       display: none; position: fixed; inset: 0; z-index: 200;
-      background: var(--bg); flex-direction: column;
-      -webkit-overflow-scrolling: touch;
-      width: 100vw; max-width: 100vw; left: 0;
+      background: rgba(0,0,0,.7);
+      align-items: flex-start; justify-content: center;
+      padding: 20px clamp(8px,4vw,16px); overflow-y: auto;
     }
     #font-panel.open { display: flex; }
+    #font-panel > .font-inner {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: var(--radius);
+      max-width: 560px; width: 100%;
+      display: flex; flex-direction: column;
+      max-height: calc(100vh - 40px);
+      position: relative;
+    }
     #font-panel-header {
       display: flex; align-items: center; justify-content: space-between;
       padding: 14px 16px 10px; border-bottom: 1px solid rgba(255,255,255,.08);
@@ -525,6 +535,46 @@
       font-size: .97rem; font-family: inherit; resize: vertical;
     }
     #btn-load-custom { margin-top: 8px; width: 100%; }
+
+    /* ─────── Profile overlay ─────── */
+    #profile-overlay {
+      display: none; position: fixed; inset: 0; z-index: 150;
+      background: rgba(0,0,0,.7);
+      align-items: flex-start; justify-content: center;
+      padding: 20px clamp(8px,4vw,16px); overflow-y: auto;
+    }
+    #profile-overlay.open { display: flex; }
+    #profile-panel {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: var(--radius);
+      padding: 24px 20px;
+      max-width: 560px; width: 100%;
+      position: relative;
+    }
+    #profile-panel h2 { color: var(--accent); margin-bottom: 8px; font-size: 1.2rem; }
+    #profile-panel > p { color: var(--muted); font-size: .9rem; margin-bottom: 14px; }
+    #btn-profile-close {
+      position: absolute; top: 12px; right: 14px;
+      background: none; border: none; color: var(--muted);
+      font-size: 1.4rem; cursor: pointer;
+    }
+    .profile-load-btn {
+      display: block; width: 100%; text-align: left;
+      margin-top: 14px; padding: 10px 14px;
+      background: color-mix(in srgb, var(--accent) 18%, transparent);
+      color: var(--text); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+      border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer;
+    }
+    .profile-load-btn:hover { background: color-mix(in srgb, var(--accent) 28%, transparent); }
+    .profile-desc { color: var(--muted); font-size: .9rem; margin: 6px 4px 4px; line-height: 1.4; }
+    #profile-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    #btn-open-profiles {
+      padding: 8px 14px; border-radius: 8px; font-weight: 700;
+      background: var(--surface); color: var(--text);
+      border: 1px solid rgba(255,255,255,.15); cursor: pointer;
+    }
+    .muted-label { color: var(--muted); font-size: .88rem; }
 
     /* ─────── Help overlay ─────── */
     #help-overlay {
@@ -691,14 +741,16 @@
   </div>
 </div>
 
-<!-- ── Font panel (full-screen overlay) ── -->
+<!-- ── Font panel (contained overlay) ── -->
 <div id="font-panel" role="dialog" aria-modal="true" aria-label="Select font">
-  <div id="font-panel-header">
-    <h2>CHOOSE FONT</h2>
-    <button id="font-panel-close" aria-label="Close">✕</button>
+  <div class="font-inner">
+    <div id="font-panel-header">
+      <h2>CHOOSE FONT</h2>
+      <button id="font-panel-close" aria-label="Close">✕</button>
+    </div>
+    <p id="font-panel-instructions">Tap a font to apply it. Bold variants are shown separately.</p>
+    <div id="font-panel-body"><!-- populated by JS --></div>
   </div>
-  <p id="font-panel-instructions">Tap a font to apply it. Bold variants are shown separately.</p>
-  <div id="font-panel-body"><!-- populated by JS --></div>
 </div>
 
 <!-- ── Advanced settings ── -->
@@ -707,9 +759,8 @@
 <div class="settings-block" id="flash-settings">
 
   <div id="profile-row">
-    <button class="profile-btn active" data-profile="simple">Simple</button>
-    <button class="profile-btn" data-profile="advanced">Advanced</button>
-    <button class="profile-btn" data-profile="master">Master</button>
+    <button id="btn-open-profiles" type="button">Load configuration profile…</button>
+    <span id="active-profile-label" class="muted-label"></span>
   </div>
 
   <!-- Group settings (bordered cluster) -->
@@ -755,23 +806,23 @@
   <div class="grouping-cluster">
   <p class="section-header-plain" style="margin-top:0">Pacing</p>
   <div class="toggle-row">
-    <input type="checkbox" id="pause-sentence" checked>
+    <input type="checkbox" id="pause-sentence">
     <label for="pause-sentence">Pause at sentence endings (! / . / ?)</label>
   </div>
   <div class="slider-row indented-child">
     <label for="sentence-mult">Sentence ending delay multiplier</label>
     <button class="nudge-btn" id="sentence-mult-dec" type="button">&lt;</button>
-    <input type="number" id="sentence-mult" class="num-input" min="1.00" max="10.00" step="0.05" value="1.00">
+    <input type="number" id="sentence-mult" class="num-input" min="1.00" max="10.00" step="0.05" value="1.80">
     <button class="nudge-btn" id="sentence-mult-inc" type="button">&gt;</button>
   </div>
   <div class="toggle-row">
-    <input type="checkbox" id="pause-transition" checked>
+    <input type="checkbox" id="pause-transition">
     <label for="pause-transition">Pause at transitions (, / ; / :)</label>
   </div>
   <div class="slider-row indented-child">
     <label for="transition-mult">Transition delay multiplier</label>
     <button class="nudge-btn" id="transition-mult-dec" type="button">&lt;</button>
-    <input type="number" id="transition-mult" class="num-input" min="1.00" max="10.00" step="0.05" value="1.00">
+    <input type="number" id="transition-mult" class="num-input" min="1.00" max="10.00" step="0.05" value="1.60">
     <button class="nudge-btn" id="transition-mult-inc" type="button">&gt;</button>
   </div>
   </div><!-- /.pacing-cluster -->
@@ -782,8 +833,8 @@
   </div>
   <div class="slider-row indented-child">
     <label for="hyphen-thr">Word-hyphenation threshold</label>
-    <input type="range" id="hyphen-thr" min="4" max="40" step="1" value="15">
-    <span class="val" id="hyphen-val">15</span>
+    <input type="range" id="hyphen-thr" min="4" max="40" step="1" value="25">
+    <span class="val" id="hyphen-val">25</span>
   </div>
 
   <!-- Repeated-character condensing (RSVP display only) -->
@@ -797,10 +848,14 @@
     <span class="val" id="condense-threshold-val">5</span>
   </div>
 
-  <!-- Central-char alignment + red highlight -->
+  <!-- Central-char alignment + red highlight (independent toggles) -->
   <div class="toggle-row">
-    <input type="checkbox" id="align-central-char">
-    <label for="align-central-char">Align central char &amp; highlight in red</label>
+    <input type="checkbox" id="align-central-char" checked>
+    <label for="align-central-char">Align central char</label>
+  </div>
+  <div class="toggle-row">
+    <input type="checkbox" id="highlight-central-char">
+    <label for="highlight-central-char">Highlight central char in red</label>
   </div>
 
   <!-- Context words toggle (moved to bottom of advanced settings) -->
@@ -872,6 +927,27 @@
 </div><!-- /.group-ring load -->
 
 <!-- ── Help overlay ── -->
+<!-- ── Profile picker overlay ── -->
+<div id="profile-overlay">
+  <div id="profile-panel">
+    <button id="btn-profile-close" aria-label="Close">✕</button>
+    <h2>Load configuration profile</h2>
+    <p>Pick a preset. Loading a profile overwrites the related settings; you can tweak afterward.</p>
+
+    <button class="profile-load-btn" data-profile="simple">Simple RSVP</button>
+    <p class="profile-desc">Basic RSVP setup. Consistent one word at a time, centered, even pacing (default settings, max words 1, pacing disabled).</p>
+
+    <button class="profile-load-btn" data-profile="basic">Basic Speed</button>
+    <p class="profile-desc">Simpler approach integrating research-supported improvements: central-char highlight, pacing, and small-word grouping for better flow and focus. Max words 3, single-word max 3, max group length 10, group small words, small-word threshold 3, pacing 1.8/1.6, align + red highlight on.</p>
+
+    <button class="profile-load-btn" data-profile="advanced">Advanced Speed</button>
+    <p class="profile-desc">Same as Basic Speed but no red highlight. Max words 4, single-word max 10, group length 14, small-word threshold 4, pacing 1.7/1.4.</p>
+
+    <button class="profile-load-btn" data-profile="master">Master Speed</button>
+    <p class="profile-desc">Same as Advanced but red highlight + center alignment back on. Max words 5, single-word max 12, group length 18, small-word threshold 5, pacing 1.8/1.6.</p>
+  </div>
+</div>
+
 <div id="help-overlay">
   <div id="help-panel">
     <button id="btn-help-close">✕</button>
@@ -981,14 +1057,15 @@ let timer  = null;
 // Group settings
 let maxWords        = 1;
 let maxChars        = 12;
-let hyphenThreshold = 15;
+let hyphenThreshold = 25;
 let splitHyphens    = true;
 let singleWordMaxLength = 8;
 
 // Context words
 let showCtx = false;
 let showCoreBox = false;        // box around central chunk (only when showCtx)
-let alignCentralChar = false;   // align central character + color it red
+let alignCentralChar = true;    // align chunk so central character is fixed at center
+let highlightCentralChar = false; // color the central character red
 
 // Repeated-character condensing (RSVP display only)
 let condenseRepeats = true;
@@ -1004,10 +1081,10 @@ let smallWordThreshold = 3;
 
 // Pacing pauses — multipliers applied to the per-chunk delay when the chunk
 // ends a sentence / transition. 1.0 = no extra pause.
-let pauseSentence    = true;
-let sentenceMult     = 1.0;
-let pauseTransition  = true;
-let transitionMult   = 1.0;
+let pauseSentence    = false;
+let sentenceMult     = 1.80;
+let pauseTransition  = false;
+let transitionMult   = 1.60;
 
 // Page settings
 let pageSize    = 200; // words per page
@@ -1536,7 +1613,9 @@ function renderFlash() {
 // display so the central char sits at a fixed screen position (the geometric
 // center of the word stage). Otherwise render as plain text.
 function renderChunkWithOptionalCentralAlignment(chunkText) {
-  if (!alignCentralChar) {
+  // Highlight class is independent of layout — only requires spans to exist.
+  wordDisplay.classList.toggle('highlight-central', highlightCentralChar);
+  if (!alignCentralChar && !highlightCentralChar) {
     wordDisplay.style.transform = '';
     ctxBefore.style.transform   = '';
     ctxAfter.style.transform    = '';
@@ -1567,6 +1646,14 @@ function renderChunkWithOptionalCentralAlignment(chunkText) {
   wordDisplay.appendChild(preEl);
   wordDisplay.appendChild(cenEl);
   wordDisplay.appendChild(postEl);
+
+  if (!alignCentralChar) {
+    // Highlight-only path: render spans but skip the measure/translate.
+    wordDisplay.style.transform = '';
+    ctxBefore.style.transform   = '';
+    ctxAfter.style.transform    = '';
+    return;
+  }
 
   // Measure & translate so central char's center sits at word-stage's center.
   // Reset transforms first to measure natural geometry.
@@ -1979,9 +2066,9 @@ function onGroupChange() {
   pageStarts = [0];
   render();
 }
-maxWordsEl.addEventListener('input',    () => { clearProfile(); onGroupChange(); });
-maxCharsEl.addEventListener('input',    () => { clearProfile(); onGroupChange(); });
-hyphenEl.addEventListener('input',      () => { clearProfile(); onGroupChange(); });
+maxWordsEl.addEventListener('input',    () => { onGroupChange(); });
+maxCharsEl.addEventListener('input',    () => { onGroupChange(); });
+hyphenEl.addEventListener('input',      () => { onGroupChange(); });
 splitHyphensEl.addEventListener('change', () => { onGroupChange(); });
 singleWordMaxLengthEl.addEventListener('input', () => { onGroupChange(); });
 
@@ -2028,29 +2115,81 @@ function onSmallWordChange() {
 preferSmallGroupEl.addEventListener('change',  onSmallWordChange);
 smallWordThresholdEl.addEventListener('input', onSmallWordChange);
 
-// ── Profile presets ──
+// ── Profile presets (loaded via overlay panel) ──
 const PROFILES = {
-  simple:   { maxWords: 1, maxChars: 10, hyphen: 20 },
-  advanced: { maxWords: 3, maxChars: 10, hyphen: 25 },
-  master:   { maxWords: 7, maxChars: 20, hyphen: 40 },
+  simple: {
+    label: 'Simple RSVP',
+    maxWords: 1, singleWordMax: 8, maxChars: 12,
+    preferSmallGroup: true, smallWordThreshold: 3,
+    pauseSentence: false, sentenceMult: 1.80,
+    pauseTransition: false, transitionMult: 1.60,
+    alignCentral: true, highlightCentral: false,
+  },
+  basic: {
+    label: 'Basic Speed',
+    maxWords: 3, singleWordMax: 3, maxChars: 10,
+    preferSmallGroup: true, smallWordThreshold: 3,
+    pauseSentence: true, sentenceMult: 1.80,
+    pauseTransition: true, transitionMult: 1.60,
+    alignCentral: true, highlightCentral: true,
+  },
+  advanced: {
+    label: 'Advanced Speed',
+    maxWords: 4, singleWordMax: 10, maxChars: 14,
+    preferSmallGroup: true, smallWordThreshold: 4,
+    pauseSentence: true, sentenceMult: 1.70,
+    pauseTransition: true, transitionMult: 1.40,
+    alignCentral: true, highlightCentral: false,
+  },
+  master: {
+    label: 'Master Speed',
+    maxWords: 5, singleWordMax: 12, maxChars: 18,
+    preferSmallGroup: true, smallWordThreshold: 5,
+    pauseSentence: true, sentenceMult: 1.80,
+    pauseTransition: true, transitionMult: 1.60,
+    alignCentral: true, highlightCentral: true,
+  },
 };
-
-function clearProfile() {
-  document.querySelectorAll('.profile-btn').forEach(b => b.classList.remove('active'));
-}
 
 function applyProfile(name) {
   const p = PROFILES[name];
   if (!p) return;
+  // Grouping
   maxWordsEl.value = p.maxWords;
   maxCharsEl.value = p.maxChars;
-  hyphenEl.value   = p.hyphen;
-  clearProfile();
-  document.querySelector(`.profile-btn[data-profile="${name}"]`).classList.add('active');
+  singleWordMaxLengthEl.value = p.singleWordMax;
+  // Small-word
+  preferSmallGroupEl.checked = p.preferSmallGroup;
+  smallWordThresholdEl.value = p.smallWordThreshold;
+  // Pacing
+  pauseSentenceEl.checked   = p.pauseSentence;
+  sentenceMultEl.value      = p.sentenceMult.toFixed(2);
+  pauseTransitionEl.checked = p.pauseTransition;
+  transitionMultEl.value    = p.transitionMult.toFixed(2);
+  // Central-char
+  alignCentralCharEl.checked     = p.alignCentral;
+  highlightCentralCharEl.checked = p.highlightCentral;
+  alignCentralChar     = p.alignCentral;
+  highlightCentralChar = p.highlightCentral;
+  // Apply all dependent changes
   onGroupChange();
+  onSmallWordChange();
+  onPacingChange();
+  document.getElementById('active-profile-label').textContent = '(' + p.label + ' loaded)';
+  document.getElementById('profile-overlay').classList.remove('open');
+  if (mode === 'flash') renderFlash();
 }
 
-document.querySelectorAll('.profile-btn').forEach(btn => {
+document.getElementById('btn-open-profiles').addEventListener('click', () => {
+  document.getElementById('profile-overlay').classList.add('open');
+});
+document.getElementById('btn-profile-close').addEventListener('click', () => {
+  document.getElementById('profile-overlay').classList.remove('open');
+});
+document.getElementById('profile-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
+});
+document.querySelectorAll('.profile-load-btn').forEach(btn => {
   btn.addEventListener('click', () => applyProfile(btn.dataset.profile));
 });
 
@@ -2075,6 +2214,11 @@ alignCentralCharEl.addEventListener('change', () => {
   alignCentralChar = alignCentralCharEl.checked;
   if (mode === 'flash') renderFlash();
 });
+const highlightCentralCharEl = document.getElementById('highlight-central-char');
+highlightCentralCharEl.addEventListener('change', () => {
+  highlightCentralChar = highlightCentralCharEl.checked;
+  if (mode === 'flash') renderFlash();
+});
 
 // Pacing pauses
 const pauseSentenceEl   = document.getElementById('pause-sentence');
@@ -2092,11 +2236,21 @@ function readMultiplierFromInput(inputEl) {
   inputEl.value = clamped.toFixed(2);
   return clamped;
 }
+function applyPacingDisabledState() {
+  const setRowDisabled = (inputEl, decId, incId, isOn) => {
+    inputEl.disabled = !isOn;
+    document.getElementById(decId).disabled = !isOn;
+    document.getElementById(incId).disabled = !isOn;
+  };
+  setRowDisabled(sentenceMultEl,   'sentence-mult-dec',   'sentence-mult-inc',   pauseSentenceEl.checked);
+  setRowDisabled(transitionMultEl, 'transition-mult-dec', 'transition-mult-inc', pauseTransitionEl.checked);
+}
 function onPacingChange() {
   pauseSentence   = pauseSentenceEl.checked;
   sentenceMult    = readMultiplierFromInput(sentenceMultEl);
   pauseTransition = pauseTransitionEl.checked;
   transitionMult  = readMultiplierFromInput(transitionMultEl);
+  applyPacingDisabledState();
   updateAvgWpm();
   // If currently playing, re-arm timer so the new multiplier takes effect now.
   if (!paused && mode === 'flash') { clearTimeout(timer); scheduleFlash(); }
@@ -2114,6 +2268,7 @@ document.getElementById('sentence-mult-dec').addEventListener('click', () => nud
 document.getElementById('sentence-mult-inc').addEventListener('click', () => nudgeMultiplier(sentenceMultEl,   +0.05));
 document.getElementById('transition-mult-dec').addEventListener('click',() => nudgeMultiplier(transitionMultEl, -0.05));
 document.getElementById('transition-mult-inc').addEventListener('click',() => nudgeMultiplier(transitionMultEl, +0.05));
+applyPacingDisabledState();
 
 // Page size
 pageSizeEl.addEventListener('input', () => {
