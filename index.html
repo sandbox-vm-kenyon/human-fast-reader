@@ -291,7 +291,8 @@
     .spd-btn.default-mark { flex: 0 0 auto; padding: 10px 14px; border-color: color-mix(in srgb, var(--accent) 40%, transparent); color: color-mix(in srgb, var(--accent) 80%, var(--text)); }
     /* Non-clickable WPM readout that replaces the old 300 WPM button. Fixed
        width so the readout doesn't reflow as the displayed numbers change. */
-    .wpm-inline-display {
+    .wpm-inline-display,
+    .wpm-inline-display:hover {
       flex: 0 0 auto;
       width: 130px;
       padding: 10px 0;
@@ -299,11 +300,16 @@
       align-items: center;
       justify-content: center;
       font-weight: 600;
-      color: color-mix(in srgb, var(--accent) 80%, var(--text));
-      border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,.10);
       border-radius: 8px;
       cursor: default;
       user-select: none;
+    }
+    :root.light .wpm-inline-display,
+    :root.light .wpm-inline-display:hover {
+      color: var(--text);
+      border-color: rgba(0,0,0,.12);
     }
 
     /* ─────── Slider rows ─────── */
@@ -409,13 +415,6 @@
     }
     .indented-child {
       margin-left: 24px;
-    }
-    /* Toggle rows have an extra checkbox + gap (~26px) before their label
-       text, which pushes the visible label farther right than a slider-row's
-       label at the same row margin. Pull the toggle row left so the label
-       text lines up with sibling slider-row.indented-child labels. */
-    .toggle-row.indented-child {
-      margin-left: -2px;
     }
     /* Slim preset-speed buttons */
     #wpm-preset-row {
