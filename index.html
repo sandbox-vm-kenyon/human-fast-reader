@@ -640,10 +640,20 @@
     <label for="split-hyphens">Split hyphenated words above char limit</label>
   </div>
 
+  <!-- Do not group across punctuation boundaries -->
+  <div class="toggle-row">
+    <input type="checkbox" id="no-cross-sentence" checked>
+    <label for="no-cross-sentence">Do not group across "! / . / ?"</label>
+  </div>
+  <div class="toggle-row">
+    <input type="checkbox" id="no-cross-transition" checked>
+    <label for="no-cross-transition">Do not group across ", / ; / : / -"</label>
+  </div>
+
   <!-- Repeated-character condensing (RSVP display only) -->
   <div class="toggle-row">
     <input type="checkbox" id="condense-repeats" checked>
-    <label for="condense-repeats">Condense repeated characters (RSVP only)</label>
+    <label for="condense-repeats">Condense repeated characters (i.e. ------------- becomes one single [----])</label>
   </div>
   <div class="slider-row">
     <label for="condense-threshold">Repeated character threshold</label>
@@ -828,6 +838,10 @@ let showCtx = false;
 // Repeated-character condensing (RSVP display only)
 let condenseRepeats = true;
 let condenseThreshold = 5;
+
+// Grouping boundaries — do not group across sentence/transition punctuation
+let noCrossSentence   = true;
+let noCrossTransition = true;
 
 // Page settings
 let pageSize    = 200; // words per page
@@ -1172,14 +1186,27 @@ function rebuildChunks() {
       continue;
     }
     let chunk = token.text;
+    let lastTokenText = token.text;
     let count = 1;
+    // If the chunk's first token already ends a boundary we honor, stop here.
+    if ((noCrossSentence   && endsSentence(lastTokenText)) ||
+        (noCrossTransition && endsTransition(lastTokenText))) {
+      chunks.push(chunk);
+      chunkWordStart.push(token.origIdx);
+      i += count;
+      continue;
+    }
     while (count < maxWords && i + count < expanded.length) {
       const next = expanded[i + count];
       if (HYPHEN_RE.test(next.text.slice(-1)) || next.text.endsWith('-')) break;
       const candidate = chunk + ' ' + next.text;
       if (candidate.length > maxChars) break;
       chunk = candidate;
+      lastTokenText = next.text;
       count++;
+      // After absorbing this token, stop if it ended a sentence/transition.
+      if ((noCrossSentence   && endsSentence(lastTokenText)) ||
+          (noCrossTransition && endsTransition(lastTokenText))) break;
     }
     chunks.push(chunk);
     chunkWordStart.push(token.origIdx);
@@ -1616,6 +1643,19 @@ function onCondenseChange() {
 }
 condenseRepeatsEl.addEventListener('change', onCondenseChange);
 condenseThresholdEl.addEventListener('input', onCondenseChange);
+
+// Do-not-group-across-punctuation toggles
+const noCrossSentenceEl   = document.getElementById('no-cross-sentence');
+const noCrossTransitionEl = document.getElementById('no-cross-transition');
+function onBoundaryChange() {
+  noCrossSentence   = noCrossSentenceEl.checked;
+  noCrossTransition = noCrossTransitionEl.checked;
+  rebuildChunks();
+  updateAvgWpm();
+  render();
+}
+noCrossSentenceEl.addEventListener('change',   onBoundaryChange);
+noCrossTransitionEl.addEventListener('change', onBoundaryChange);
 
 // ── Profile presets ──
 const PROFILES = {
