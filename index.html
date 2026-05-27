@@ -971,6 +971,10 @@
         <button class="nudge-btn" id="complexity-baseline-inc" type="button">&gt;</button>
         <span class="val range-hint">1 – 60 chars</span>
       </div>
+      <div class="toggle-row">
+        <input type="checkbox" id="complexity-extra-words" checked>
+        <label for="complexity-extra-words">Increase weight for multi-word &amp; hyphenated</label>
+      </div>
     </div>
     <svg id="complexity-graph" viewBox="0 0 160 100" aria-hidden="true">
       <!-- axes + ticks populated by JS -->
@@ -1245,6 +1249,7 @@ let complexitySlowdownEnabled = true;
 let complexityWeight   = 1.20;  // chosen so eff=30 with z=1.5 gives ~2x slowdown
 let complexityCurve    = 1.5;
 let complexityBaseline = 10;    // "belly position" — chunk length at which slowdown equals multiplier
+let complexityExtraWords = true; // add (wordCount - 1) bonus for multi-word / hyphenated chunks
 
 // Page settings
 let pageSize    = 200; // words per page
@@ -1969,6 +1974,7 @@ function chunkEffectiveLength(chunkText) {
   // Remove punctuation EXCEPT hyphens/dashes and whitespace.
   const cleaned = chunkText.replace(/[^\p{L}\p{N}\s\-‐-—]/gu, '');
   const charCount = cleaned.length;
+  if (!complexityExtraWords) return charCount;
   // Split on whitespace OR hyphens/dashes for word count
   const wordCount = cleaned.split(/[\s\-‐-—]+/).filter(Boolean).length;
   return charCount + Math.max(0, wordCount - 1);
@@ -2460,10 +2466,12 @@ const complexitySlowdownEl = document.getElementById('complexity-slowdown');
 const complexityWeightEl   = document.getElementById('complexity-weight');
 const complexityCurveEl    = document.getElementById('complexity-curve');
 const complexityBaselineEl = document.getElementById('complexity-baseline');
+const complexityExtraWordsEl = document.getElementById('complexity-extra-words');
 function applyComplexityDisabled() {
   complexityWeightEl.disabled   = !complexitySlowdownEnabled;
   complexityCurveEl.disabled    = !complexitySlowdownEnabled;
   complexityBaselineEl.disabled = !complexitySlowdownEnabled;
+  complexityExtraWordsEl.disabled = !complexitySlowdownEnabled;
 }
 function onComplexityChange() {
   complexitySlowdownEnabled = complexitySlowdownEl.checked;
@@ -2480,6 +2488,7 @@ function onComplexityChange() {
   if (!isFinite(b)) b = 10; b = Math.max(1, Math.min(60, b));
   complexityBaselineEl.value = Number.isInteger(b * 10) ? (Number.isInteger(b) ? String(b) : b.toFixed(1)) : String(b);
   complexityBaseline = b;
+  complexityExtraWords = complexityExtraWordsEl.checked;
   applyComplexityDisabled();
   if (typeof redrawComplexityGraph === 'function') redrawComplexityGraph();
   updateAvgWpm();
@@ -2502,6 +2511,7 @@ complexitySlowdownEl.addEventListener('change', onComplexityChange);
 complexityWeightEl.addEventListener('change',   onComplexityChange);
 complexityCurveEl.addEventListener('change',    onComplexityChange);
 complexityBaselineEl.addEventListener('change', onComplexityChange);
+complexityExtraWordsEl.addEventListener('change', onComplexityChange);
 applyComplexityDisabled();
 
 // Live graph of slowdown curve for current multiplier + exponent.
