@@ -393,9 +393,24 @@
     }
     .indented-child {
       margin-left: 24px;
-      border-left: 2px solid rgba(255,255,255,.12);
-      padding-left: 10px;
     }
+    /* Slim preset-speed buttons */
+    #wpm-preset-row {
+      display: flex; gap: 6px; margin: 4px 0 0;
+    }
+    .wpm-preset-btn {
+      flex: 1; min-width: 0;
+      padding: 4px 0;
+      font-size: .85rem;
+      font-weight: 600;
+      color: var(--muted);
+      background: transparent;
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .wpm-preset-btn:hover { color: var(--text); border-color: rgba(255,255,255,.25); }
+    :root.light .wpm-preset-btn { border-color: rgba(0,0,0,.12); }
     .group-ring {
       border: 1px solid rgba(255,255,255,.1);
       border-radius: var(--radius);
@@ -588,7 +603,17 @@
   <button class="nudge-btn" id="wpm-inc">&gt;</button>
   <span class="val" id="wpm-val">—</span>
 </div>
-<p class="slider-note">(wpm shown includes settings that group/split words)</p>
+<!-- ── Preset speed buttons ── -->
+<div id="wpm-preset-row">
+  <button class="wpm-preset-btn" data-set="100">100</button>
+  <button class="wpm-preset-btn" data-set="150">150</button>
+  <button class="wpm-preset-btn" data-set="200">200</button>
+  <button class="wpm-preset-btn" data-set="250">250</button>
+  <button class="wpm-preset-btn" data-set="300">300</button>
+  <button class="wpm-preset-btn" data-set="400">400</button>
+  <button class="wpm-preset-btn" data-set="500">500</button>
+</div>
+<p class="slider-note">(wpm shown: base speed/calculated speed factoring multi-word etc.)</p>
 
 <!-- ── Mode toggle ── -->
 <div id="mode-row">
@@ -698,7 +723,7 @@
     <input type="checkbox" id="condense-repeats" checked>
     <label for="condense-repeats">Condense repeated characters (i.e. ------------- becomes one single [----])</label>
   </div>
-  <div class="slider-row">
+  <div class="slider-row indented-child">
     <label for="condense-threshold">Repeated character threshold</label>
     <input type="range" id="condense-threshold" min="3" max="50" step="1" value="5">
     <span class="val" id="condense-threshold-val">5</span>
@@ -1623,9 +1648,15 @@ function setWpm(v) {
 }
 
 function updateAvgWpm() {
-  if (!chunks.length || !words.length) { wpmValEl.textContent = '—'; return; }
+  if (!chunks.length || !words.length) {
+    wpmValEl.textContent = wpm + '/—';
+    return;
+  }
   const wordsPerChunk = words.length / chunks.length;
-  wpmValEl.textContent = Math.round(wordsPerChunk * wpm);
+  const effective = Math.round(wordsPerChunk * wpm);
+  // TODO: when sentence/transition pacing pauses are added, factor those
+  // delays into the effective speed here.
+  wpmValEl.textContent = wpm + '/' + effective;
 }
 
 // ── Page navigation ──
@@ -1786,6 +1817,12 @@ document.getElementById('speed-btns').addEventListener('click', e => {
   if (!btn) return;
   if (btn.dataset.set)   setWpm(parseInt(btn.dataset.set, 10));
   if (btn.dataset.delta) setWpm(wpm + parseInt(btn.dataset.delta, 10));
+});
+// Preset speed jump buttons
+document.getElementById('wpm-preset-row').addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if (!btn || !btn.dataset.set) return;
+  setWpm(parseInt(btn.dataset.set, 10));
 });
 
 // Size
