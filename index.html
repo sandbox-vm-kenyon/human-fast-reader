@@ -766,7 +766,7 @@
   </div>
   <div class="toggle-row">
     <input type="checkbox" id="pause-transition" checked>
-    <label for="pause-transition">Pause at transitions (, / ; / : / -)</label>
+    <label for="pause-transition">Pause at transitions (, / ; / :)</label>
   </div>
   <div class="slider-row indented-child">
     <label for="transition-mult">Transition delay multiplier</label>
@@ -1685,8 +1685,13 @@ function tick() {
 // over transition.
 function chunkPaceMultiplier(chunkText) {
   if (!chunkText) return 1.0;
-  if (pauseSentence   && endsSentence(chunkText))   return sentenceMult;
-  if (pauseTransition && endsTransition(chunkText)) return transitionMult;
+  if (pauseSentence   && endsSentence(chunkText)) return sentenceMult;
+  // Pacing transition uses comma/semicolon/colon only — dashes are not paced
+  // because hyphenated/em-dash breaks aren't natural pause points for reading.
+  if (pauseTransition) {
+    const last = chunkText[chunkText.length - 1];
+    if (TRANSITION_RE.test(last)) return transitionMult;
+  }
   return 1.0;
 }
 
