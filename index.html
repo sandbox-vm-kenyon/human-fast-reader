@@ -649,6 +649,17 @@
     <label for="split-hyphens">Split hyphenated words above char limit</label>
   </div>
 
+  <!-- Prefer grouping small words together -->
+  <div class="toggle-row">
+    <input type="checkbox" id="prefer-small-group" checked>
+    <label for="prefer-small-group">Prefer grouping small words</label>
+  </div>
+  <div class="slider-row">
+    <label for="small-word-threshold">Small word threshold</label>
+    <input type="range" id="small-word-threshold" min="1" max="10" step="1" value="3">
+    <span class="val" id="small-word-threshold-val">3</span>
+  </div>
+
   <!-- Repeated-character condensing (RSVP display only) -->
   <div class="toggle-row">
     <input type="checkbox" id="condense-repeats" checked>
@@ -841,6 +852,10 @@ let condenseThreshold = 5;
 // Grouping boundaries — do not group across sentence/transition punctuation
 let noCrossSentence   = true;
 let noCrossTransition = true;
+
+// Small-word grouping preference
+let preferSmallGroup  = true;
+let smallWordThreshold = 3;
 
 // Page settings
 let pageSize    = 200; // words per page
@@ -1198,6 +1213,24 @@ function rebuildChunks() {
     while (count < maxWords && i + count < expanded.length) {
       const next = expanded[i + count];
       if (HYPHEN_RE.test(next.text.slice(-1)) || next.text.endsWith('-')) break;
+
+      // Small-word preference: when current chunk is exactly one LONG token and
+      // we're about to absorb a SMALL token, peek one further — if the token
+      // after that is ALSO small (and not a hyphen segment), defer the small
+      // word to start a new small-word run instead of attaching it to the long
+      // opener. Example: "monstrous" | "was in the"  rather than
+      // "monstrous was" | "in the".
+      if (preferSmallGroup && count === 1 &&
+          !isSmallWord(token.text, smallWordThreshold) &&
+          isSmallWord(next.text, smallWordThreshold)) {
+        const after = expanded[i + count + 1];
+        if (after &&
+            !HYPHEN_RE.test(after.text.slice(-1)) && !after.text.endsWith('-') &&
+            isSmallWord(after.text, smallWordThreshold)) {
+          break;
+        }
+      }
+
       const candidate = chunk + ' ' + next.text;
       if (candidate.length > maxChars) break;
       chunk = candidate;
@@ -1655,6 +1688,21 @@ function onBoundaryChange() {
 }
 noCrossSentenceEl.addEventListener('change',   onBoundaryChange);
 noCrossTransitionEl.addEventListener('change', onBoundaryChange);
+
+// Small-word grouping preference
+const preferSmallGroupEl    = document.getElementById('prefer-small-group');
+const smallWordThresholdEl  = document.getElementById('small-word-threshold');
+const smallWordThresholdValEl = document.getElementById('small-word-threshold-val');
+function onSmallWordChange() {
+  preferSmallGroup   = preferSmallGroupEl.checked;
+  smallWordThreshold = parseInt(smallWordThresholdEl.value, 10);
+  smallWordThresholdValEl.textContent = smallWordThreshold;
+  rebuildChunks();
+  updateAvgWpm();
+  render();
+}
+preferSmallGroupEl.addEventListener('change',  onSmallWordChange);
+smallWordThresholdEl.addEventListener('input', onSmallWordChange);
 
 // ── Profile presets ──
 const PROFILES = {
