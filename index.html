@@ -1090,16 +1090,16 @@
     <p>Pick a preset. Loading a profile overwrites the related settings; you can tweak afterward.</p>
 
     <button class="profile-load-btn" data-profile="simple">Simple RSVP</button>
-    <p class="profile-desc">Basic RSVP setup. Consistent one word at a time, centered, even pacing (default settings, max words 1, pacing disabled).</p>
+    <p class="profile-desc">Basic RSVP setup. One word at a time, centered, even pacing. Pacing and complexity slowdown both disabled.</p>
 
     <button class="profile-load-btn" data-profile="basic">Basic Speed</button>
-    <p class="profile-desc">Simpler approach integrating research-supported improvements: central-char highlight, pacing, and small-word grouping for better flow and focus. Max words 3, single-word max 3, max group length 10, group small words, small-word threshold 3, pacing 1.8/1.6, align + red highlight on.</p>
+    <p class="profile-desc">Integrates pacing, small-word grouping, central-char highlight, and complexity slowdown for natural flow. Max words 2, single-word max 3, max group length 10, pacing 1.8/1.6, align + red highlight on, complexity slowdown on.</p>
 
     <button class="profile-load-btn" data-profile="advanced">Advanced Speed</button>
-    <p class="profile-desc">Same as Basic Speed but no red highlight. Max words 4, single-word max 10, group length 14, small-word threshold 4, pacing 1.7/1.4.</p>
+    <p class="profile-desc">Same flow features without red highlight. Max words 4, single-word max 10, group length 14, small-word threshold 4, pacing 1.7/1.4, complexity slowdown on.</p>
 
     <button class="profile-load-btn" data-profile="master">Master Speed</button>
-    <p class="profile-desc">Same as Advanced but red highlight + center alignment back on. Max words 5, single-word max 12, group length 18, small-word threshold 5, pacing 1.8/1.6.</p>
+    <p class="profile-desc">Wider grouping with red highlight + center alignment + complexity slowdown. Max words 5, single-word max 12, group length 18, small-word threshold 5, pacing 1.8/1.6, complexity slowdown on.</p>
   </div>
 </div>
 
@@ -1139,6 +1139,18 @@
     <ul>
       <li>Characters + (extra-words bonus, when toggled on).</li>
       <li>Hyphens count as chars and as word splitters.</li>
+    </ul>
+
+    <h3>Maintain effective WPM</h3>
+    <ul>
+      <li>Compressor-style makeup gain: divides base delay by the mean per-chunk multiplier so the average chunk still hits the configured WPM.</li>
+      <li>Use this when you want the curve's flow without slowing overall reading speed.</li>
+    </ul>
+
+    <h3>Profiles</h3>
+    <ul>
+      <li><strong>Simple RSVP</strong>: complexity slowdown <em>off</em>.</li>
+      <li><strong>Basic / Advanced / Master Speed</strong>: complexity slowdown <em>on</em>.</li>
     </ul>
   </div>
 </div>
@@ -1196,7 +1208,7 @@
     <ul>
       <li><strong>Size</strong> — RSVP display font size (0.5–5 rem).</li>
       <li><strong>WPM</strong> — chunk rate; displayed WPM accounts for word grouping and splitting.</li>
-      <li><strong>Simple / Advanced / Master</strong> — presets: 1w/10c, 3w/10c, 7w/20c hyphen thresholds.</li>
+      <li><strong>Configuration profiles</strong> — Simple RSVP (single word, no slowdowns), Basic / Advanced / Master Speed (grouping + pacing + complexity slowdown for natural flow).</li>
       <li><strong>Max words / Max chars</strong> — group short words into one chunk (e.g. "and he was").</li>
       <li><strong>Hyphen at</strong> — hard-split very long strings across chunks.</li>
       <li><strong>Split hyphenated words above char limit</strong> — splits naturally hyphenated words (e.g. "self-aware") at the hyphen before applying the hard-split rule. Supports all Unicode hyphen/dash characters.</li>
@@ -2454,6 +2466,7 @@ const PROFILES = {
     pauseSentence: false, sentenceMult: 1.80,
     pauseTransition: false, transitionMult: 1.60,
     alignCentral: true, highlightCentral: false,
+    complexitySlowdown: false,
   },
   basic: {
     label: 'Basic Speed',
@@ -2462,6 +2475,7 @@ const PROFILES = {
     pauseSentence: true, sentenceMult: 1.80,
     pauseTransition: true, transitionMult: 1.60,
     alignCentral: true, highlightCentral: true,
+    complexitySlowdown: true,
   },
   advanced: {
     label: 'Advanced Speed',
@@ -2470,6 +2484,7 @@ const PROFILES = {
     pauseSentence: true, sentenceMult: 1.70,
     pauseTransition: true, transitionMult: 1.40,
     alignCentral: true, highlightCentral: false,
+    complexitySlowdown: true,
   },
   master: {
     label: 'Master Speed',
@@ -2478,6 +2493,7 @@ const PROFILES = {
     pauseSentence: true, sentenceMult: 1.80,
     pauseTransition: true, transitionMult: 1.60,
     alignCentral: true, highlightCentral: true,
+    complexitySlowdown: true,
   },
 };
 
@@ -2501,10 +2517,13 @@ function applyProfile(name) {
   highlightCentralCharEl.checked = p.highlightCentral;
   alignCentralChar     = p.alignCentral;
   highlightCentralChar = p.highlightCentral;
+  // Complexity slowdown (on/off; curve params keep their current values)
+  complexitySlowdownEl.checked = !!p.complexitySlowdown;
   // Apply all dependent changes
   onGroupChange();
   onSmallWordChange();
   onPacingChange();
+  onComplexityChange();
   document.getElementById('active-profile-label').textContent = '(' + p.label + ' loaded)';
   document.getElementById('profile-overlay').classList.remove('open');
   if (mode === 'flash') renderFlash();

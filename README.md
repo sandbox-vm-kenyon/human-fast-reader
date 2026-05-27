@@ -29,6 +29,38 @@ Links:
 
 ---
 
+## Flow & rhythm: correcting the "word jackhammer"
+
+A common complaint with plain RSVP is the **word-jackhammer feel** — every chunk
+gets the same fixed duration, so short connective words flash by at the same
+pace as long, dense ones. Reading rhythm collapses, comprehension drops, and
+the brain has to re-stitch sentences after the fact.
+
+This app fixes that with a per-chunk **Complexity slowdown** curve. Each chunk's
+display time gets a length-aware bump along a quadratic Bezier shape you control
+directly:
+
+![Complexity slowdown curve UI](screenshots/compexity-slowdown-curve.png)
+
+- **Endpoint chars / multiplier** — where the curve lands (e.g. 30 chars → 2.1×).
+- **Midpoint chars** — anchors the control point's x position.
+- **Pull strength / rotation°** — moves the control point in polar coordinates,
+  letting you bend the curve into a fast-early-rise + plateau, a linear ramp,
+  or a slow-start outlier-focused shape.
+- **Multi-word & hyphenated** chunks get a length bonus so phrase chunks slow
+  down to match their cognitive load.
+- **Maintain effective WPM** (compressor-style makeup gain) divides the base
+  delay by the mean per-chunk multiplier so the overall reading speed stays at
+  your configured WPM — you get the flow shape without losing pace.
+- Sentence-ending and transition punctuation pauses are additive, not
+  multiplicative, so the maximum slowdown stays predictable.
+
+The net effect: short words still pass quickly, longer/denser chunks hold
+slightly longer, sentence endings get a real beat, and the text reads more like
+spoken language than a metronome.
+
+---
+
 ## Modes
 
 ### Speed (RSVP) mode
@@ -45,7 +77,7 @@ Shows flowing text with your current reading position highlighted and original l
 |---|---|
 | **Size** | RSVP display font size (0.5–5 rem). |
 | **WPM** | Chunk rate; displayed WPM accounts for word grouping and splitting. |
-| **Simple / Advanced / Master** | Presets: 1w/10c, 3w/10c, 7w/20c hyphen thresholds. |
+| **Configuration profiles** | Simple RSVP (single word, no slowdowns) or Basic / Advanced / Master Speed (grouping + pacing + complexity slowdown). |
 | **Max words / Max chars** | Group short words into one chunk (e.g. "and he was"). |
 | **Hyphen at** | Hard-split very long strings across chunks. |
 | **Split hyphenated words above char limit** | Splits naturally hyphenated words (e.g. "self-aware") at the hyphen before applying the hard-split rule. Supports all Unicode hyphen/dash characters. |
