@@ -1424,6 +1424,8 @@ function renderFlash() {
 function renderChunkWithOptionalCentralAlignment(chunkText) {
   if (!alignCentralChar) {
     wordDisplay.style.transform = '';
+    ctxBefore.style.transform   = '';
+    ctxAfter.style.transform    = '';
     wordDisplay.textContent = chunkText;
     return;
   }
@@ -1447,14 +1449,21 @@ function renderChunkWithOptionalCentralAlignment(chunkText) {
   wordDisplay.appendChild(postEl);
 
   // Measure & translate so central char's center sits at word-stage's center.
-  // Reset transform first to measure natural geometry.
+  // Reset transforms first to measure natural geometry.
   wordDisplay.style.transform = '';
+  ctxBefore.style.transform   = '';
+  ctxAfter.style.transform    = '';
   const stageRect   = wordStage.getBoundingClientRect();
   const centralRect = cenEl.getBoundingClientRect();
   const stageCenter   = stageRect.left + stageRect.width  / 2;
   const centralCenter = centralRect.left + centralRect.width / 2;
   const offset = stageCenter - centralCenter;
-  wordDisplay.style.transform = 'translateX(' + offset + 'px)';
+  const tx = 'translateX(' + offset + 'px)';
+  // Apply same shift to leading/trailing panes so their inner text stays
+  // glued to the central chunk's edges after the chunk shifts.
+  wordDisplay.style.transform = tx;
+  ctxBefore.style.transform   = tx;
+  ctxAfter.style.transform    = tx;
 }
 
 // ─── Page mode ───
