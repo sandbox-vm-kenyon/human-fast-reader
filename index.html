@@ -894,14 +894,13 @@
   <div class="slider-row indented-child">
     <label for="complexity-weight">Slowdown multiplier</label>
     <input type="number" id="complexity-weight" class="num-input" min="1" max="5" step="0.05" value="1.20">
+    <span class="val">1.00 (off) – 1.40 (strong)</span>
   </div>
   <div class="slider-row indented-child">
     <label for="complexity-curve">Slowdown curve</label>
     <input type="number" id="complexity-curve" class="num-input" min="1" max="4" step="0.1" value="2.5">
+    <span class="val">1.5 (near linear) – 3.0 (steep)</span>
   </div>
-  <p class="slider-note indented-child" style="margin-top:2px">
-    Useful: multiplier 1.00 (off) – 1.40 (strong); curve 1.5 (near linear) – 3.0 (steeply penalizes long chunks). Default 1.20 × 2.5 ≈ 3× for a 25-char outlier; ~1× for short chunks.
-  </p>
 
   <!-- Underline beneath the reading panel -->
   <div class="toggle-row">
