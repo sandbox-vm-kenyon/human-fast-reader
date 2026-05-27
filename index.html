@@ -1114,8 +1114,8 @@
 
     <h3>Invert curve</h3>
     <ul>
-      <li>Reflects a positive (&gt; 1) exponent into a fast-early-rise → hard-plateau shape.</li>
-      <li>Past ~10 effective chars, slowdown stays at the multiplier.</li>
+      <li>Mirrors the curve about <code>y = x</code>: <code>y = x<sup>z</sup></code> → <code>y = x<sup>1/z</sup></code>.</li>
+      <li>Same shape, swapped axes — exponent 2 inverted = square-root growth.</li>
     </ul>
 
     <h3>Effective length</h3>
@@ -1128,7 +1128,7 @@
     <ul>
       <li><strong>Default</strong> — <code>1.20 × 1.5</code> · slight curve up.</li>
       <li><strong>Linear</strong> — <code>1.80 × 1.0</code> · proportional.</li>
-      <li><strong>Front-loaded</strong> — <code>1.50 × 2.0</code>, invert ON · most slowdown done by ~7 chars, plateaus after.</li>
+      <li><strong>Front-loaded</strong> — <code>1.50 × 2.0</code>, invert ON · square-root growth; fast early rise, keeps climbing slowly past 10.</li>
       <li><strong>Outlier-focused</strong> — <code>1.20 × 2.5</code> · short chunks untouched, long ones heavily penalized.</li>
     </ul>
   </div>
@@ -2016,15 +2016,10 @@ function complexitySlowdownMultiplierForEffectiveLength(effectiveLength) {
   if (complexityWeight <= 1.0) return 1.0;
   if (effectiveLength <= 0) return 1.0;
   const ratio = effectiveLength / complexityBaseline;
-  let term;
-  if (complexityInvert) {
-    // Reflected curve: fast early rise that plateaus at the multiplier when
-    // chunk length reaches the baseline. Beyond baseline, slowdown stays at m.
-    const t = Math.min(1, Math.max(0, ratio));
-    term = 1 - Math.pow(1 - t, complexityCurve);
-  } else {
-    term = Math.pow(ratio, complexityCurve);
-  }
+  // "Invert" mirrors the curve about y=x: y = x^z becomes y = x^(1/z).
+  // No clamping, no plateau — just the mathematical mirror of the same shape.
+  const effectiveExponent = complexityInvert ? (1 / complexityCurve) : complexityCurve;
+  const term = Math.pow(Math.max(0, ratio), effectiveExponent);
   return 1.0 + (complexityWeight - 1.0) * term;
 }
 
