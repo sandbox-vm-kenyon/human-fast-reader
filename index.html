@@ -471,6 +471,11 @@
     }
     .toggle-row label { font-size: .92rem; color: var(--muted); }
     .toggle-row input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+    /* For an indented toggle row (e.g. "Show box around core word(s)" as a
+       child of "Show leading & trailing words"), align the indented
+       checkbox's LEFT EDGE with the parent row's label text — which sits at
+       x = 16px (checkbox) + 10px (gap) = 26px from the row's left edge. */
+    .toggle-row.indented-child { margin-left: 26px; }
 
     /* ─────── Books ─────── */
     #books-row {
