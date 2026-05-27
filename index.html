@@ -988,7 +988,7 @@
       <div class="slider-row">
         <label for="bezier-strength">Pull strength</label>
         <button class="nudge-btn" id="bezier-strength-dec" type="button">&lt;</button>
-        <input type="number" id="bezier-strength" class="num-input" min="0" max="30" step="0.5" value="5">
+        <input type="number" id="bezier-strength" class="num-input" min="-30" max="30" step="0.5" value="5">
         <button class="nudge-btn" id="bezier-strength-inc" type="button">&gt;</button>
       </div>
       <div class="slider-row">
@@ -2596,7 +2596,7 @@ function onComplexityChange() {
   bezierEndpointX   = clampField(bezierEndpointXEl, 5,    60,  30);
   bezierEndpointY   = clampField(bezierEndpointYEl, 1,    10,  3);
   bezierMidpointX   = clampField(bezierMidpointXEl, 0.1,  60,  15);
-  bezierStrength    = clampField(bezierStrengthEl,  0,    30,  5);
+  bezierStrength    = clampField(bezierStrengthEl, -30,   30,  5);
   bezierRotationDeg = clampField(bezierRotationEl, -180, 180,  90);
   complexityExtraWords = complexityExtraWordsEl.checked;
   applyComplexityDisabled();
@@ -2616,8 +2616,8 @@ document.getElementById('bezier-endpoint-y-dec').addEventListener('click', () =>
 document.getElementById('bezier-endpoint-y-inc').addEventListener('click', () => nudgeComplexityField(bezierEndpointYEl, +0.1, 1, 10));
 document.getElementById('bezier-midpoint-x-dec').addEventListener('click', () => nudgeComplexityField(bezierMidpointXEl, -1, 0.1, 60));
 document.getElementById('bezier-midpoint-x-inc').addEventListener('click', () => nudgeComplexityField(bezierMidpointXEl, +1, 0.1, 60));
-document.getElementById('bezier-strength-dec').addEventListener('click', () => nudgeComplexityField(bezierStrengthEl, -0.5, 0, 30));
-document.getElementById('bezier-strength-inc').addEventListener('click', () => nudgeComplexityField(bezierStrengthEl, +0.5, 0, 30));
+document.getElementById('bezier-strength-dec').addEventListener('click', () => nudgeComplexityField(bezierStrengthEl, -0.5, -30, 30));
+document.getElementById('bezier-strength-inc').addEventListener('click', () => nudgeComplexityField(bezierStrengthEl, +0.5, -30, 30));
 document.getElementById('bezier-rotation-dec').addEventListener('click', () => nudgeComplexityField(bezierRotationEl, -5, -180, 180));
 document.getElementById('bezier-rotation-inc').addEventListener('click', () => nudgeComplexityField(bezierRotationEl, +5, -180, 180));
 
