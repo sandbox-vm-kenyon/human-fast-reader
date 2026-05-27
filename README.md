@@ -8,26 +8,24 @@ A mobile-first speed reading web app using RSVP (Rapid Serial Visual Presentatio
 
 ---
 
-## How it works
+## RSVP speed reading claims are mostly false!
 
-Traditional reading is slowed by **saccades** — the eye movements your eyes make to jump across a line of text. Each saccade takes 20–200 ms and forces a brief pause. RSVP eliminates saccades entirely by presenting words one at a time in a fixed location. Your eyes stay still; only the words change.
+RSVP, or Rapid Serial Visual Presentation, has gotten recent attention because of speed-reading claims that are unproven in real-world application where retention is actually measured.
 
-Research shows trained readers can reach 600–1000 WPM with good comprehension using RSVP, compared to a typical 200–300 WPM for conventional reading.
+### HOWEVER — RSVP enhancements have shown promise for speed and retention
 
-- [Wikipedia — Rapid Serial Visual Presentation](https://en.wikipedia.org/wiki/Rapid_serial_visual_presentation)
+Research indicates that RSVP performance may improve (performance trends positive) when pacing and flow are enhanced. This app explores RSVP configurations associated with those measured improvements to enhance and adjust flow and phrasing.
 
----
+### RSVP does have proven benefits for visually impaired & ADHD
 
-### *Note on recent RSVP speed reading claims
+Certain vision impairments have been shown to benefit from RSVP-style reading, and research has been done showing benefits in focus for people with ADHD.
 
-RSVP is not proven to increase comprehension, and many claimed benefits are overstated. The stronger evidence suggests that RSVP may be useful as an alternate presentation mode rather than a universal speed-reading upgrade. Interesting research shows promise around ADHD-related focus, visually limited/peripheral reading cases, and timing models that better preserve natural reading rhythm. The multi-word display settings in this app move subtly in that direction by reducing the "single-word machine-gun" effect and giving phrases more usable context.
+Links:
 
-Links by topic:
-
-- General RSVP / speed-reading caution: [Acklin & Papesh (2017)](https://pubmed.ncbi.nlm.nih.gov/29461715/)
-- ADHD / attention-focused reading support: [Cambridge — Reading without eye movements: improving reading comprehension in young adults with ADHD](https://www.cambridge.org/core/journals/journal-of-the-international-neuropsychological-society/article/reading-without-eye-movements-improving-reading-comprehension-in-young-adults-with-attentiondeficithyperactivity-disorder-adhd/33851CEA7C1AC6193D088D4D5551ED3C)
-- Visual limitation / peripheral reading training: [ScienceDirect — Vision Research article](https://www.sciencedirect.com/science/article/pii/S0042698917301219)
-- Natural rhythm / phrase-aware RSVP timing: [Ferguson (Auburn, 2024)](https://bpb-us-e2.wpmucdn.com/wordpress.auburn.edu/dist/a/151/files/2024/08/Ferguson.pdf)
+- RSVP caution / speed-reading limits: [Acklin & Papesh (2017)](https://pubmed.ncbi.nlm.nih.gov/29461715/)
+- ADHD / focus-related RSVP benefit: [Cambridge — Reading without eye movements (ADHD)](https://www.cambridge.org/core/journals/journal-of-the-international-neuropsychological-society/article/reading-without-eye-movements-improving-reading-comprehension-in-young-adults-with-attentiondeficithyperactivity-disorder-adhd/33851CEA7C1AC6193D088D4D5551ED3C)
+- Visual limitation / peripheral reading training: [ScienceDirect — Vision Research](https://www.sciencedirect.com/science/article/pii/S0042698917301219)
+- Phrase/sentence boundary pacing pilot: [Ferguson (Auburn, 2024)](https://bpb-us-e2.wpmucdn.com/wordpress.auburn.edu/dist/a/151/files/2024/08/Ferguson.pdf)
 
 ---
 
