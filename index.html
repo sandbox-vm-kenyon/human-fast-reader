@@ -135,13 +135,25 @@
       font-family: var(--reader-font);
       color: var(--text);
       font-weight: 700; letter-spacing: .02em;
-      white-space: nowrap;
       flex: 1;
-      min-width: 0; /* allow flex item to shrink below content width so overflow can clip */
+      min-width: 0;
       overflow: hidden;
+      position: relative;        /* anchor for inner pinned span */
+      align-self: stretch;
     }
-    #ctx-before { text-align: right; padding-right: .4em; }
-    #ctx-after  { text-align: left;  padding-left:  .4em; }
+    /* Inner span is absolutely pinned so the right edge of #ctx-before's text
+       stays glued to the container's right edge (and conversely for after).
+       This guarantees overflow clips on the correct side regardless of
+       browser flex-overflow quirks. */
+    #ctx-before .ctx-text,
+    #ctx-after  .ctx-text {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      white-space: nowrap;
+    }
+    #ctx-before .ctx-text { right: .4em; }
+    #ctx-after  .ctx-text { left:  .4em; }
     #word-display {
       font-size: var(--word-size);
       font-family: var(--reader-font);
@@ -149,6 +161,13 @@
       text-align: center; padding: 2px 0;
       white-space: nowrap;
       flex-shrink: 0;
+      will-change: transform;
+    }
+    #word-display .word-central { color: #ff5252; }
+    #word-display.show-core-box {
+      outline: 2px solid rgba(255,255,255,.35);
+      outline-offset: 4px;
+      border-radius: 4px;
     }
 
     /* ─────── Page stage ─────── */
@@ -502,9 +521,9 @@
 
 <!-- ── Fast stage ── -->
 <div id="word-stage">
-  <div id="ctx-before"></div>
+  <div id="ctx-before"><span class="ctx-text"></span></div>
   <div id="word-display"></div>
-  <div id="ctx-after"></div>
+  <div id="ctx-after"><span class="ctx-text"></span></div>
 </div>
 
 <!-- ── Page stage ── -->
@@ -685,10 +704,20 @@
     <span class="val" id="condense-threshold-val">5</span>
   </div>
 
+  <!-- Central-char alignment + red highlight -->
+  <div class="toggle-row">
+    <input type="checkbox" id="align-central-char">
+    <label for="align-central-char">Align central char &amp; highlight in red</label>
+  </div>
+
   <!-- Context words toggle (moved to bottom of advanced settings) -->
   <div class="toggle-row">
     <input type="checkbox" id="ctx-toggle">
     <label for="ctx-toggle">Show leading &amp; trailing words</label>
+  </div>
+  <div class="toggle-row indented-child">
+    <input type="checkbox" id="show-core-box" disabled>
+    <label for="show-core-box">Show box around core word(s)</label>
   </div>
 </div>
 
@@ -865,6 +894,8 @@ let singleWordMaxLength = 8;
 
 // Context words
 let showCtx = false;
+let showCoreBox = false;        // box around central chunk (only when showCtx)
+let alignCentralChar = false;   // align central character + color it red
 
 // Repeated-character condensing (RSVP display only)
 let condenseRepeats = true;
@@ -888,6 +919,8 @@ const wordStage   = document.getElementById('word-stage');
 const wordDisplay = document.getElementById('word-display');
 const ctxBefore   = document.getElementById('ctx-before');
 const ctxAfter    = document.getElementById('ctx-after');
+const ctxBeforeText = ctxBefore.querySelector('.ctx-text');
+const ctxAfterText  = ctxAfter.querySelector('.ctx-text');
 
 const pageStageEl = document.getElementById('page-stage');
 const pageNavEl   = document.getElementById('page-nav');
@@ -1360,21 +1393,68 @@ function render() {
 }
 
 function renderFlash() {
-  if (!chunks.length) { wordDisplay.textContent = 'Load text'; ctxBefore.textContent = ''; ctxAfter.textContent = ''; return; }
-  wordDisplay.textContent = chunks[pos] || '—';
+  if (!chunks.length) {
+    wordDisplay.textContent = 'Load text';
+    ctxBeforeText.textContent = '';
+    ctxAfterText.textContent  = '';
+    return;
+  }
+
+  const chunkText = chunks[pos] || '—';
+  renderChunkWithOptionalCentralAlignment(chunkText);
 
   if (showCtx && words.length) {
     const wi = chunkToWord(pos);
     const { before, after } = scrubContext(words, wi, 40);
-    ctxBefore.textContent = before;
-    ctxAfter.textContent  = after;
+    ctxBeforeText.textContent = before;
+    ctxAfterText.textContent  = after;
   } else {
-    ctxBefore.textContent = '';
-    ctxAfter.textContent  = '';
+    ctxBeforeText.textContent = '';
+    ctxAfterText.textContent  = '';
   }
 
   const total = chunks.length;
   statsEl.textContent = (pos + 1) + ' / ' + total;
+}
+
+// Render the central chunk. If "align central char" is enabled, split into
+// pre/central/post spans, color the central char red, and translate the whole
+// display so the central char sits at a fixed screen position (the geometric
+// center of the word stage). Otherwise render as plain text.
+function renderChunkWithOptionalCentralAlignment(chunkText) {
+  if (!alignCentralChar) {
+    wordDisplay.style.transform = '';
+    wordDisplay.textContent = chunkText;
+    return;
+  }
+  const len = chunkText.length;
+  const centralIdx = Math.floor(len / 2);
+  const pre  = chunkText.slice(0, centralIdx);
+  const ch   = chunkText.slice(centralIdx, centralIdx + 1);
+  const post = chunkText.slice(centralIdx + 1);
+  wordDisplay.innerHTML = '';
+  const preEl = document.createElement('span');
+  preEl.className = 'word-pre';
+  preEl.textContent = pre;
+  const cenEl = document.createElement('span');
+  cenEl.className = 'word-central';
+  cenEl.textContent = ch;
+  const postEl = document.createElement('span');
+  postEl.className = 'word-post';
+  postEl.textContent = post;
+  wordDisplay.appendChild(preEl);
+  wordDisplay.appendChild(cenEl);
+  wordDisplay.appendChild(postEl);
+
+  // Measure & translate so central char's center sits at word-stage's center.
+  // Reset transform first to measure natural geometry.
+  wordDisplay.style.transform = '';
+  const stageRect   = wordStage.getBoundingClientRect();
+  const centralRect = cenEl.getBoundingClientRect();
+  const stageCenter   = stageRect.left + stageRect.width  / 2;
+  const centralCenter = centralRect.left + centralRect.width / 2;
+  const offset = stageCenter - centralCenter;
+  wordDisplay.style.transform = 'translateX(' + offset + 'px)';
 }
 
 // ─── Page mode ───
@@ -1809,8 +1889,24 @@ document.querySelectorAll('.profile-btn').forEach(btn => {
 });
 
 // Context words toggle
+const showCoreBoxEl     = document.getElementById('show-core-box');
+const alignCentralCharEl = document.getElementById('align-central-char');
+function applyCoreBoxClass() {
+  wordDisplay.classList.toggle('show-core-box', showCoreBox && showCtx);
+}
 ctxToggle.addEventListener('change', () => {
   showCtx = ctxToggle.checked;
+  // Core-box toggle only meaningful when leading/trailing context is shown.
+  showCoreBoxEl.disabled = !showCtx;
+  applyCoreBoxClass();
+  if (mode === 'flash') renderFlash();
+});
+showCoreBoxEl.addEventListener('change', () => {
+  showCoreBox = showCoreBoxEl.checked;
+  applyCoreBoxClass();
+});
+alignCentralCharEl.addEventListener('change', () => {
+  alignCentralChar = alignCentralCharEl.checked;
   if (mode === 'flash') renderFlash();
 });
 
