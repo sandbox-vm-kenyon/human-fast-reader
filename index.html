@@ -357,6 +357,15 @@
     .num-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     .num-input { -moz-appearance: textfield; }
     .num-input:disabled, .nudge-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .range-hint { font-weight: 400 !important; color: var(--muted) !important; }
+    .help-pill {
+      width: 1.4em; height: 1.4em; line-height: 1.2em;
+      padding: 0; border-radius: 50%;
+      border: 1px solid currentColor; background: transparent;
+      color: var(--text); font-weight: 700; font-size: .9rem;
+      cursor: pointer; margin-left: 6px;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
     .slider-note { font-size: .97rem; color: var(--muted); margin: 2px 0 6px; line-height: 1.4; }
     .section-header { font-size: .97rem; color: var(--muted); text-decoration: underline; margin: 4px 0 6px; line-height: 1.4; }
     .section-header-plain { font-size: .97rem; color: var(--muted); margin: 0 0 6px; line-height: 1.4; }
@@ -586,6 +595,32 @@
       border: 1px solid rgba(255,255,255,.15); cursor: pointer;
     }
     .muted-label { color: var(--muted); font-size: .88rem; }
+
+    /* ─────── Complexity slowdown help overlay ─────── */
+    #complexity-help-overlay {
+      display: none; position: fixed; inset: 0; z-index: 160;
+      background: rgba(0,0,0,.7);
+      align-items: flex-start; justify-content: center;
+      padding: 20px clamp(8px,4vw,16px); overflow-y: auto;
+    }
+    #complexity-help-overlay.open { display: flex; }
+    #complexity-help-panel {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: var(--radius);
+      padding: 24px 20px;
+      max-width: 600px; width: 100%;
+      position: relative;
+    }
+    #complexity-help-panel h2 { color: var(--accent); margin-bottom: 8px; font-size: 1.2rem; }
+    #complexity-help-panel h3 { color: var(--text); margin-top: 14px; font-size: 1rem; }
+    #complexity-help-panel p, #complexity-help-panel li { color: var(--muted); font-size: .95rem; line-height: 1.5; }
+    #complexity-help-panel code { background: rgba(255,255,255,.07); padding: 1px 4px; border-radius: 4px; font-size: .9rem; }
+    #btn-complexity-help-close {
+      position: absolute; top: 12px; right: 14px;
+      background: none; border: none; color: var(--muted);
+      font-size: 1.4rem; cursor: pointer;
+    }
 
     /* ─────── Help overlay ─────── */
     #help-overlay {
@@ -890,16 +925,17 @@
   <div class="toggle-row">
     <input type="checkbox" id="complexity-slowdown" checked>
     <label for="complexity-slowdown">Complexity slowdown factor</label>
+    <button type="button" class="help-pill" id="btn-complexity-help" aria-label="About complexity slowdown">?</button>
   </div>
   <div class="slider-row indented-child">
     <label for="complexity-weight">Slowdown multiplier</label>
     <input type="number" id="complexity-weight" class="num-input" min="1" max="5" step="0.05" value="1.20">
-    <span class="val">1.00 (off) – 1.40 (strong)</span>
+    <span class="val range-hint">1.00 (off) – 1.40 (strong)</span>
   </div>
   <div class="slider-row indented-child">
     <label for="complexity-curve">Slowdown curve</label>
-    <input type="number" id="complexity-curve" class="num-input" min="1" max="4" step="0.1" value="2.5">
-    <span class="val">1.5 (near linear) – 3.0 (steep)</span>
+    <input type="number" id="complexity-curve" class="num-input" min="0.1" max="4" step="0.1" value="2.5">
+    <span class="val range-hint">0.1 (flat) – 1.0 (linear) – 3.0 (steep)</span>
   </div>
 
   <!-- Underline beneath the reading panel -->
@@ -990,6 +1026,41 @@
 
     <button class="profile-load-btn" data-profile="master">Master Speed</button>
     <p class="profile-desc">Same as Advanced but red highlight + center alignment back on. Max words 5, single-word max 12, group length 18, small-word threshold 5, pacing 1.8/1.6.</p>
+  </div>
+</div>
+
+<!-- ── Complexity slowdown explainer overlay ── -->
+<div id="complexity-help-overlay">
+  <div id="complexity-help-panel">
+    <button id="btn-complexity-help-close" aria-label="Close">✕</button>
+    <h2>Complexity slowdown</h2>
+    <p>
+      Each chunk's display time is multiplied by
+      <code>1 + (multiplier − 1) × (effectiveLength / 10)<sup>curve</sup></code>.
+      "Effective length" is the chunk's character count (spaces and hyphens
+      kept, other punctuation removed) plus one extra per word beyond the
+      first.
+    </p>
+    <p>
+      <strong>Multiplier</strong> sets how much extra time the longest chunks
+      can pick up: 1.00 = off, higher = more extra time.
+      <strong>Curve</strong> shapes WHERE that time goes — high curve
+      concentrates slowdown on outliers, low curve spreads it across all
+      chunks.
+    </p>
+
+    <h3>Suggested settings</h3>
+    <ul>
+      <li><strong>Default — concentrate on outliers:</strong> multiplier <code>1.20</code>, curve <code>2.5</code>. Short chunks ≈ 1.0×, 25-char outlier ≈ 3×.</li>
+      <li><strong>No curve (linear):</strong> multiplier <code>1.80</code>, curve <code>1.0</code>. Slowdown grows in proportion to length. 5-char ≈ 1.4×, 12-char ≈ 2.0×, 25-char ≈ 3×.</li>
+      <li><strong>Flat curve (sub-linear, &lt; 1):</strong> multiplier <code>2.27</code>, curve <code>0.5</code>. Pulls medium chunks UP closer to the outlier — short chunks ≈ 1.7×, 25-char ≈ 3×. Useful if you find medium chunks zip by too fast under the default.</li>
+      <li><strong>Very flat (≈ even slowdown for all chunks):</strong> multiplier <code>2.82</code>, curve <code>0.1</code>. Nearly the same multiplier applied to every chunk regardless of length — closer in spirit to a global slowdown.</li>
+    </ul>
+    <p>
+      Lower curve values make the slowdown feel like a flat "everything is
+      slower", while higher curves preserve fast reading on short chunks and
+      only pause on the genuinely complex ones.
+    </p>
   </div>
 </div>
 
@@ -2352,7 +2423,7 @@ function onComplexityChange() {
   complexityWeightEl.value = w.toFixed(2);
   complexityWeight = w;
   let c = parseFloat(complexityCurveEl.value);
-  if (!isFinite(c)) c = 1; c = Math.max(1, Math.min(4, c));
+  if (!isFinite(c)) c = 1; c = Math.max(0.1, Math.min(4, c));
   complexityCurveEl.value = c.toFixed(1);
   complexityCurve = c;
   applyComplexityDisabled();
@@ -2363,6 +2434,17 @@ complexitySlowdownEl.addEventListener('change', onComplexityChange);
 complexityWeightEl.addEventListener('change',   onComplexityChange);
 complexityCurveEl.addEventListener('change',    onComplexityChange);
 applyComplexityDisabled();
+
+// Complexity help overlay
+document.getElementById('btn-complexity-help').addEventListener('click', () => {
+  document.getElementById('complexity-help-overlay').classList.add('open');
+});
+document.getElementById('btn-complexity-help-close').addEventListener('click', () => {
+  document.getElementById('complexity-help-overlay').classList.remove('open');
+});
+document.getElementById('complexity-help-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
+});
 
 // Pause playback when window loses focus
 const pauseOnBlurEl = document.getElementById('pause-on-blur');
