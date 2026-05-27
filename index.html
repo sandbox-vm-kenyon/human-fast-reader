@@ -298,7 +298,7 @@
       display: flex; gap: 4px; flex-wrap: nowrap;
       justify-content: center; margin: 4px 0;
     }
-    .spd-btn { flex: 1; min-width: 0; padding: 10px 4px; font-size: 1rem; font-weight: 600; color: var(--muted); border-color: rgba(255,255,255,.08); }
+    .spd-btn { flex: 1; min-width: 0; padding: 10px 4px; font-size: 1rem; font-weight: 600; color: var(--text); border-color: rgba(255,255,255,.08); }
     .spd-btn:hover { color: var(--text); }
     .spd-btn.default-mark { flex: 0 0 auto; padding: 10px 14px; border-color: color-mix(in srgb, var(--accent) 40%, transparent); color: color-mix(in srgb, var(--accent) 80%, var(--text)); }
     /* Non-clickable WPM readout that replaces the old 300 WPM button. Fixed
@@ -692,11 +692,11 @@
 
 <!-- ── Speed buttons ── -->
 <div id="speed-btns">
-  <button class="spd-btn" data-delta="-40">&lt;&lt;40</button>
-  <button class="spd-btn" data-delta="-10">&lt;10</button>
+  <button class="spd-btn" data-delta="-50">&lt;&lt; 50</button>
+  <button class="spd-btn" data-delta="-10">&lt; 10</button>
   <div class="spd-btn wpm-inline-display" id="wpm-inline-display">150/150 WPM</div>
-  <button class="spd-btn" data-delta="+10">10&gt;</button>
-  <button class="spd-btn" data-delta="+40">40&gt;&gt;</button>
+  <button class="spd-btn" data-delta="+10">10 &gt;</button>
+  <button class="spd-btn" data-delta="+50">50 &gt;&gt;</button>
 </div>
 
 <!-- ── WPM slider ── -->
