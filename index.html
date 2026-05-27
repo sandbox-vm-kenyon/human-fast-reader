@@ -1187,62 +1187,110 @@ function rebuildChunks() {
     }
   }
 
-  // Build chunks from expanded tokens, grouping non-hyphen-ending tokens up to
-  // maxWords / maxChars limits.
-  let i = 0;
-  while (i < expanded.length) {
-    const token = expanded[i];
-    if (HYPHEN_RE.test(token.text.slice(-1)) || token.text.endsWith('-')) {
-      // Hyphen-ending token is always its own chunk
-      chunks.push(token.text);
-      chunkWordStart.push(token.origIdx);
-      i++;
-      continue;
-    }
-    let chunk = token.text;
-    let lastTokenText = token.text;
-    let count = 1;
-    // If the chunk's first token already ends a boundary we honor, stop here.
-    if ((noCrossSentence   && endsSentence(lastTokenText)) ||
-        (noCrossTransition && endsTransition(lastTokenText))) {
-      chunks.push(chunk);
-      chunkWordStart.push(token.origIdx);
-      i += count;
-      continue;
-    }
-    while (count < maxWords && i + count < expanded.length) {
-      const next = expanded[i + count];
-      if (HYPHEN_RE.test(next.text.slice(-1)) || next.text.endsWith('-')) break;
+  // ── Build chunks: sentence/phrase units → balanced packing ──
+  // Partition expanded tokens into UNITS, then pack each unit independently:
+  //   1. Greedy pass at the user's maxWords cap → chunk count N for the unit.
+  //   2. Re-pack with target = ceil(W / N) words (still capped by maxChars).
+  //   3. If the rebalanced pass produces ≤ N chunks, prefer it (more even
+  //      sizes); otherwise keep the greedy pass.
+  // This avoids jarring stragglers like "He didn't say any" / "more," at the
+  // end of a phrase under Master settings.
 
-      // Small-word preference: when current chunk is exactly one LONG token and
-      // we're about to absorb a SMALL token, peek one further — if the token
-      // after that is ALSO small (and not a hyphen segment), defer the small
-      // word to start a new small-word run instead of attaching it to the long
-      // opener. Example: "monstrous" | "was in the"  rather than
-      // "monstrous was" | "in the".
+  function isHyphenEnd(text) {
+    return HYPHEN_RE.test(text.slice(-1)) || text.endsWith('-');
+  }
+
+  function greedyAdvance(start, end, wordCap) {
+    const first = expanded[start];
+    if (isHyphenEnd(first.text)) return 1;
+    let chunkText = first.text;
+    let count = 1;
+    // If the very first token already ends a sentence/transition that we honor,
+    // stop here (matches old behavior for sentence-final single tokens).
+    if ((noCrossSentence   && endsSentence(first.text)) ||
+        (noCrossTransition && endsTransition(first.text))) {
+      return 1;
+    }
+    while (count < wordCap && start + count < end) {
+      const next = expanded[start + count];
+      if (isHyphenEnd(next.text)) break;
+      // Small-word preference (sentence-aware, phrase-aware when toggled):
+      // defer a small word from attaching to a long opener if a small-word run
+      // follows in the same sentence (and same phrase when noCrossTransition is on).
       if (preferSmallGroup && count === 1 &&
-          !isSmallWord(token.text, smallWordThreshold) &&
-          isSmallWord(next.text, smallWordThreshold)) {
-        const after = expanded[i + count + 1];
-        if (after &&
-            !HYPHEN_RE.test(after.text.slice(-1)) && !after.text.endsWith('-') &&
+          !isSmallWord(first.text, smallWordThreshold) &&
+          isSmallWord(next.text, smallWordThreshold) &&
+          !endsSentence(next.text) &&
+          !(noCrossTransition && endsTransition(next.text))) {
+        const after = expanded[start + count + 1];
+        if (after && !isHyphenEnd(after.text) &&
             isSmallWord(after.text, smallWordThreshold)) {
           break;
         }
       }
-
-      const candidate = chunk + ' ' + next.text;
+      const candidate = chunkText + ' ' + next.text;
       if (candidate.length > maxChars) break;
-      chunk = candidate;
-      lastTokenText = next.text;
+      chunkText = candidate;
       count++;
-      // After absorbing this token, stop if it ended a sentence/transition.
-      if ((noCrossSentence   && endsSentence(lastTokenText)) ||
-          (noCrossTransition && endsTransition(lastTokenText))) break;
+      // Belt-and-braces: stop after absorbing a boundary token (units already
+      // partition here when the toggle is on; this guards the toggle-off case).
+      if ((noCrossSentence   && endsSentence(next.text)) ||
+          (noCrossTransition && endsTransition(next.text))) break;
     }
-    chunks.push(chunk);
-    chunkWordStart.push(token.origIdx);
-    i += count;
+    return count;
+  }
+
+  function chunkSpan(start, count) {
+    const first = expanded[start];
+    let text = first.text;
+    for (let j = 1; j < count; j++) text += ' ' + expanded[start + j].text;
+    return { text, origIdx: first.origIdx };
+  }
+
+  function packUnitChunks(unitStart, unitEnd, wordCap) {
+    const out = [];
+    let k = unitStart;
+    while (k < unitEnd) {
+      const adv = greedyAdvance(k, unitEnd, wordCap);
+      out.push(chunkSpan(k, adv));
+      k += adv;
+    }
+    return out;
+  }
+
+  // Compute unit start indices. Sentences are unit boundaries iff the
+  // noCrossSentence toggle is on; transitions iff the noCrossTransition toggle
+  // is on. Hyphen-ending tokens are never boundaries.
+  const unitStarts = [0];
+  for (let k = 0; k + 1 < expanded.length; k++) {
+    const t = expanded[k].text;
+    if (isHyphenEnd(t)) continue;
+    const isSentBoundary  = noCrossSentence   && endsSentence(t);
+    const isTransBoundary = noCrossTransition && endsTransition(t);
+    if (isSentBoundary || isTransBoundary) unitStarts.push(k + 1);
+  }
+  unitStarts.push(expanded.length);
+
+  for (let u = 0; u + 1 < unitStarts.length; u++) {
+    const us = unitStarts[u];
+    const ue = unitStarts[u + 1];
+    const W  = ue - us;
+
+    const pass1 = packUnitChunks(us, ue, maxWords);
+    let chosen = pass1;
+
+    if (pass1.length > 1) {
+      const target = Math.max(1, Math.min(maxWords, Math.ceil(W / pass1.length)));
+      if (target < maxWords) {
+        const pass2 = packUnitChunks(us, ue, target);
+        if (pass2.length <= pass1.length) chosen = pass2;
+      }
+    }
+
+    for (const c of chosen) {
+      chunks.push(c.text);
+      chunkWordStart.push(c.origIdx);
+    }
   }
 
   pos = wordToChunk(anchorWord);
