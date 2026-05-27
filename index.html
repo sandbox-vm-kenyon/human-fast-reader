@@ -1511,10 +1511,17 @@ function renderFlash() {
   renderChunkWithOptionalCentralAlignment(chunkText);
 
   if (showCtx && words.length) {
-    const wi = chunkToWord(pos);
-    const { before, after } = scrubContext(words, wi, 40);
-    ctxBeforeText.textContent = before;
-    ctxAfterText.textContent  = after;
+    // Current chunk covers words[chunkStart .. chunkEnd-1]. ctxBefore/After
+    // must exclude that entire range, not just one word, otherwise multi-word
+    // chunks have their tail duplicated in ctxAfter.
+    const chunkStart = chunkToWord(pos);
+    const chunkEnd   = (pos + 1 < chunkWordStart.length)
+                      ? chunkWordStart[pos + 1]
+                      : words.length;
+    const beforeStart = Math.max(0, chunkStart - 40);
+    const afterEnd    = Math.min(words.length, chunkEnd + 40);
+    ctxBeforeText.textContent = words.slice(beforeStart, chunkStart).join(' ');
+    ctxAfterText.textContent  = words.slice(chunkEnd, afterEnd).join(' ');
   } else {
     ctxBeforeText.textContent = '';
     ctxAfterText.textContent  = '';
