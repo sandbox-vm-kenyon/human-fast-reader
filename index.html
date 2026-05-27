@@ -884,6 +884,11 @@
     <input type="checkbox" id="show-underline" checked>
     <label for="show-underline">Show underline</label>
   </div>
+
+  <div class="toggle-row">
+    <input type="checkbox" id="pause-on-blur" checked>
+    <label for="pause-on-blur">Pause playback when window loses focus</label>
+  </div>
 </div>
 
 <!-- ── Page settings ── -->
@@ -1075,6 +1080,7 @@ let singleWordMaxLength = 8;
 let showCtx = false;
 let showCoreBox = false;        // box around central chunk (only when showCtx)
 let showUnderline = true;       // horizontal underline beneath the RSVP panel
+let pauseOnBlur   = true;       // pause when window loses focus / tab hidden
 let alignCentralChar = true;    // align chunk so central character is fixed at center
 let highlightCentralChar = true;  // color the central character red
 
@@ -2155,7 +2161,7 @@ const PROFILES = {
   },
   basic: {
     label: 'Basic Speed',
-    maxWords: 3, singleWordMax: 3, maxChars: 10,
+    maxWords: 2, singleWordMax: 3, maxChars: 10,
     preferSmallGroup: true, smallWordThreshold: 3,
     pauseSentence: true, sentenceMult: 1.80,
     pauseTransition: true, transitionMult: 1.60,
@@ -2256,6 +2262,12 @@ showUnderlineEl.addEventListener('change', () => {
 });
 // Apply initial state from default-checked input.
 wordStage.classList.toggle('show-underline', showUnderlineEl.checked);
+
+// Pause playback when window loses focus
+const pauseOnBlurEl = document.getElementById('pause-on-blur');
+pauseOnBlurEl.addEventListener('change', () => {
+  pauseOnBlur = pauseOnBlurEl.checked;
+});
 
 // Pacing pauses
 const pauseSentenceEl   = document.getElementById('pause-sentence');
@@ -2416,13 +2428,19 @@ document.getElementById('help-overlay').addEventListener('click', e => { if (e.t
 //  Init
 // ══════════════════════════════════════════════
 applyFont('Lora', "'Lora', serif", 400);
+applyProfile('basic');
 fetchBook('gatsby');
 
 
-// Stop playback when page is hidden (covers iOS app switching, tab switching, lock screen)
-document.addEventListener('visibilitychange', () => { if (document.hidden && !paused) { stopAll(); render(); } });
-// Fallback for desktop focus loss
-window.addEventListener('blur', () => { if (!paused) { stopAll(); render(); } });
+// Stop playback when page is hidden (covers iOS app switching, tab switching,
+// lock screen). User-controllable via the "Pause playback when window loses
+// focus" toggle.
+document.addEventListener('visibilitychange', () => {
+  if (pauseOnBlur && document.hidden && !paused) { stopAll(); render(); }
+});
+window.addEventListener('blur', () => {
+  if (pauseOnBlur && !paused) { stopAll(); render(); }
+});
 </script>
 </body>
 </html>
