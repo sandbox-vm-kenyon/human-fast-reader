@@ -970,7 +970,7 @@
       <div class="slider-row">
         <label for="complexity-weight">Multiplier</label>
         <button class="nudge-btn" id="complexity-weight-dec" type="button">&lt;</button>
-        <input type="number" id="complexity-weight" class="num-input" min="1" max="20" step="0.01" value="1.20">
+        <input type="number" id="complexity-weight" class="num-input" min="1" max="20" step="0.01" value="2.00">
         <button class="nudge-btn" id="complexity-weight-inc" type="button">&gt;</button>
         <span class="val range-hint">1.00 – 20.00</span>
       </div>
@@ -981,9 +981,12 @@
         <button class="nudge-btn" id="complexity-curve-inc" type="button">&gt;</button>
         <span class="val range-hint">0.05 – 10.0</span>
       </div>
-      <div class="toggle-row">
-        <input type="checkbox" id="complexity-invert">
-        <label for="complexity-invert">Invert curve (fast early rise → plateau)</label>
+      <div class="slider-row">
+        <label for="complexity-scaler">Scaler</label>
+        <button class="nudge-btn" id="complexity-scaler-dec" type="button">&lt;</button>
+        <input type="number" id="complexity-scaler" class="num-input" min="0.5" max="30" step="0.5" value="6">
+        <button class="nudge-btn" id="complexity-scaler-inc" type="button">&gt;</button>
+        <span class="val range-hint">chars per multiplier unit</span>
       </div>
       <div class="toggle-row">
         <input type="checkbox" id="complexity-extra-words" checked>
@@ -1101,8 +1104,14 @@
 
     <h3>Multiplier</h3>
     <ul>
-      <li>Slowdown reaches this value at ~10 effective chars.</li>
+      <li>Slowdown reaches this value at the anchor (anchor = scaler × multiplier chars).</li>
       <li><code>1.00</code> = off.</li>
+    </ul>
+
+    <h3>Scaler</h3>
+    <ul>
+      <li>Chars per multiplier unit. Default <code>6</code> → 5× at 30 chars when linear.</li>
+      <li>Higher = curve spreads out over more chars; lower = much sooner.</li>
     </ul>
 
     <h3>Exponent (curve shape)</h3>
@@ -1110,12 +1119,6 @@
       <li><code>= 1</code> linear.</li>
       <li><code>&gt; 1</code> curves up — outliers feel it more.</li>
       <li><code>&lt; 1</code> curves down — fast early, then plateaus.</li>
-    </ul>
-
-    <h3>Invert curve</h3>
-    <ul>
-      <li>Mirrors the curve about <code>y = x</code>: <code>y = x<sup>z</sup></code> → <code>y = x<sup>1/z</sup></code>.</li>
-      <li>Same shape, swapped axes — exponent 2 inverted = square-root growth.</li>
     </ul>
 
     <h3>Effective length</h3>
@@ -1128,7 +1131,7 @@
     <ul>
       <li><strong>Default</strong> — <code>1.20 × 1.5</code> · slight curve up.</li>
       <li><strong>Linear</strong> — <code>1.80 × 1.0</code> · proportional.</li>
-      <li><strong>Front-loaded</strong> — <code>1.50 × 2.0</code>, invert ON · square-root growth; fast early rise, keeps climbing slowly past 10.</li>
+      <li><strong>Square-root growth</strong> — multiplier <code>2.0</code>, scaler <code>6</code>, exponent <code>0.5</code> · fast early, keeps climbing slowly.</li>
       <li><strong>Outlier-focused</strong> — <code>1.20 × 2.5</code> · short chunks untouched, long ones heavily penalized.</li>
     </ul>
   </div>
@@ -1272,10 +1275,9 @@ let transitionMult   = 1.60;
 // Multiplier semantics match pacing: 1.0 = no change; higher = more slowdown
 // at the high end. Formula: slowdown = 1 + (multiplier - 1) * (eff/baseline)^curve
 let complexitySlowdownEnabled = true;
-let complexityWeight   = 1.20;  // chosen so eff=30 with z=1.5 gives ~2x slowdown
+let complexityWeight   = 2.00;  // slowdown value reached at the anchor (eff = scaler * multiplier)
 let complexityCurve    = 1.5;
-const complexityBaseline = 10;  // anchor — chunk length at which slowdown reaches the multiplier
-let complexityInvert = false;   // reflect the curve so it rises fast early and plateaus at the multiplier
+let complexityScaler   = 6;     // chars per multiplier unit; anchor x = scaler * multiplier
 let complexityExtraWords = true; // add (wordCount - 1) bonus for multi-word / hyphenated chunks
 
 // Page settings
@@ -2015,11 +2017,11 @@ function complexitySlowdownMultiplierForEffectiveLength(effectiveLength) {
   if (!complexitySlowdownEnabled) return 1.0;
   if (complexityWeight <= 1.0) return 1.0;
   if (effectiveLength <= 0) return 1.0;
-  const ratio = effectiveLength / complexityBaseline;
-  // "Invert" mirrors the curve about y=x: y = x^z becomes y = x^(1/z).
-  // No clamping, no plateau — just the mathematical mirror of the same shape.
-  const effectiveExponent = complexityInvert ? (1 / complexityCurve) : complexityCurve;
-  const term = Math.pow(Math.max(0, ratio), effectiveExponent);
+  // Anchor x = scaler * multiplier (chars at which slowdown reaches the multiplier).
+  // So scaler is the chars-per-multiplier-unit ratio (e.g. 6 → 5× at 30 chars).
+  const anchor = complexityScaler * complexityWeight;
+  const ratio = effectiveLength / anchor;
+  const term = Math.pow(Math.max(0, ratio), complexityCurve);
   return 1.0 + (complexityWeight - 1.0) * term;
 }
 
@@ -2517,12 +2519,12 @@ wordStage.classList.toggle('show-underline', showUnderlineEl.checked);
 const complexitySlowdownEl = document.getElementById('complexity-slowdown');
 const complexityWeightEl   = document.getElementById('complexity-weight');
 const complexityCurveEl    = document.getElementById('complexity-curve');
-const complexityInvertEl = document.getElementById('complexity-invert');
+const complexityScalerEl = document.getElementById('complexity-scaler');
 const complexityExtraWordsEl = document.getElementById('complexity-extra-words');
 function applyComplexityDisabled() {
   complexityWeightEl.disabled   = !complexitySlowdownEnabled;
   complexityCurveEl.disabled    = !complexitySlowdownEnabled;
-  complexityInvertEl.disabled = !complexitySlowdownEnabled;
+  complexityScalerEl.disabled = !complexitySlowdownEnabled;
   complexityExtraWordsEl.disabled = !complexitySlowdownEnabled;
 }
 function onComplexityChange() {
@@ -2536,7 +2538,10 @@ function onComplexityChange() {
   if (!isFinite(c)) c = 1; c = Math.max(0.05, Math.min(10, c));
   complexityCurveEl.value = Number.isInteger(c * 1000) ? (Number.isInteger(c * 100) ? c.toFixed(2) : c.toFixed(3)) : String(c);
   complexityCurve = c;
-  complexityInvert = complexityInvertEl.checked;
+  let s = parseFloat(complexityScalerEl.value);
+  if (!isFinite(s)) s = 6; s = Math.max(0.5, Math.min(30, s));
+  complexityScalerEl.value = Number.isInteger(s * 10) ? (Number.isInteger(s) ? String(s) : s.toFixed(1)) : String(s);
+  complexityScaler = s;
   complexityExtraWords = complexityExtraWordsEl.checked;
   applyComplexityDisabled();
   if (typeof redrawComplexityGraph === 'function') redrawComplexityGraph();
@@ -2557,7 +2562,9 @@ document.getElementById('complexity-curve-inc').addEventListener('click',  () =>
 complexitySlowdownEl.addEventListener('change', onComplexityChange);
 complexityWeightEl.addEventListener('change',   onComplexityChange);
 complexityCurveEl.addEventListener('change',    onComplexityChange);
-complexityInvertEl.addEventListener('change', onComplexityChange);
+complexityScalerEl.addEventListener('change', onComplexityChange);
+document.getElementById('complexity-scaler-dec').addEventListener('click', () => nudgeComplexityField(complexityScalerEl, -0.5, 0.5, 30, 1));
+document.getElementById('complexity-scaler-inc').addEventListener('click', () => nudgeComplexityField(complexityScalerEl, +0.5, 0.5, 30, 1));
 complexityExtraWordsEl.addEventListener('change', onComplexityChange);
 applyComplexityDisabled();
 
