@@ -392,27 +392,24 @@
       background: var(--surface);
       border: 1px solid rgba(255,255,255,.1);
       border-radius: var(--radius);
+      padding: 24px 20px;
       max-width: 560px; width: 100%;
-      display: flex; flex-direction: column;
-      max-height: calc(100vh - 40px);
       position: relative;
     }
     #font-panel-header {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 16px 10px; border-bottom: 1px solid rgba(255,255,255,.08);
-      flex-shrink: 0;
+      margin-bottom: 8px;
     }
-    :root.light #font-panel-header { border-color: rgba(0,0,0,.1); }
-    #font-panel-header h2 { font-size: 1.1rem; font-weight: 700; margin: 0; }
+    #font-panel-header h2 { font-size: 1.1rem; font-weight: 700; margin: 0; color: var(--accent); }
     #font-panel-close {
+      position: absolute; top: 12px; right: 14px;
       background: none; border: none; font-size: 1.4rem; color: var(--muted);
       padding: 4px 8px; cursor: pointer; line-height: 1;
     }
     #font-panel-instructions {
-      font-size: .84rem; color: var(--muted); padding: 8px 16px 4px;
-      flex-shrink: 0;
+      font-size: .84rem; color: var(--muted); margin-bottom: 12px;
     }
-    #font-panel-body { flex: 1; overflow-y: auto; padding: 0 16px 32px; }
+    #font-panel-body { padding: 0; }
     .font-group-label {
       font-size: .72rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
       color: var(--accent); margin: 18px 0 8px; padding-bottom: 6px;
