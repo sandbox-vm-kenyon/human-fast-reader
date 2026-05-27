@@ -1307,20 +1307,24 @@ function rebuildChunks() {
     // Apply RSVP-only repeated-character condensing to the token before any
     // other expansion/chunking logic, so downstream length checks see the
     // visible form. Page mode reads `words[]` directly and is not affected.
+    const original = words[i];
     const w = condenseRepeats
-      ? condenseRepeatedChars(words[i], condenseThreshold)
-      : words[i];
+      ? condenseRepeatedChars(original, condenseThreshold)
+      : original;
+    // Tokens whose visible form was actually condensed (e.g. "------" -> "[----]")
+    // are typographic markers, not real words — never group them with neighbors.
+    const isCondensed = condenseRepeats && w !== original;
 
     // Step 1 — hyphen-split if enabled and word has a hyphen and is over maxChars
     let segments = [w];
-    if (splitHyphens && HYPHEN_RE.test(w) && w.length > maxChars) {
+    if (!isCondensed && splitHyphens && HYPHEN_RE.test(w) && w.length > maxChars) {
       segments = splitOnHyphens(w);
     }
 
     // Step 2 — for each segment, apply hard-split if over hyphenThreshold
     for (const seg of segments) {
-      if (seg.length <= hyphenThreshold) {
-        expanded.push({ text: seg, origIdx: i });
+      if (isCondensed || seg.length <= hyphenThreshold) {
+        expanded.push({ text: seg, origIdx: i, condensed: isCondensed });
       } else {
         // Hard-split: also check each sub-slice for embedded hyphens first
         let rem = seg;
@@ -1358,6 +1362,8 @@ function rebuildChunks() {
   function greedyAdvance(start, end, wordCap) {
     const first = expanded[start];
     if (isHyphenEnd(first.text)) return 1;
+    // Condensed repeated-char markers (e.g. "[----]") never group.
+    if (first.condensed) return 1;
     // Single-word-max-length: any token longer than this cap is excluded from
     // grouping entirely — it stands alone.
     if (first.text.length > singleWordMaxLength) return 1;
@@ -1372,6 +1378,7 @@ function rebuildChunks() {
     while (count < wordCap && start + count < end) {
       const next = expanded[start + count];
       if (isHyphenEnd(next.text)) break;
+      if (next.condensed) break;
       // Single-word-max-length applies to followers too — never group them in.
       if (next.text.length > singleWordMaxLength) break;
       // Small-word preference (sentence-aware, phrase-aware when toggled):
