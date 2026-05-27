@@ -736,6 +736,29 @@
   </div>
   </div><!-- /.grouping-cluster -->
 
+  <!-- Pacing pauses -->
+  <div class="grouping-cluster">
+  <p class="section-header-plain" style="margin-top:0">Pacing</p>
+  <div class="toggle-row">
+    <input type="checkbox" id="pause-sentence" checked>
+    <label for="pause-sentence">Pause at sentence endings (! / . / ?)</label>
+  </div>
+  <div class="slider-row indented-child">
+    <label for="sentence-mult">Sentence ending delay multiplier</label>
+    <input type="range" id="sentence-mult" min="1" max="10" step="0.5" value="1">
+    <span class="val" id="sentence-mult-val">1.0×</span>
+  </div>
+  <div class="toggle-row">
+    <input type="checkbox" id="pause-transition" checked>
+    <label for="pause-transition">Pause at transitions (, / ; / : / -)</label>
+  </div>
+  <div class="slider-row indented-child">
+    <label for="transition-mult">Transition delay multiplier</label>
+    <input type="range" id="transition-mult" min="1" max="10" step="0.5" value="1">
+    <span class="val" id="transition-mult-val">1.0×</span>
+  </div>
+  </div><!-- /.pacing-cluster -->
+
   <div class="toggle-row">
     <input type="checkbox" id="split-hyphens" checked>
     <label for="split-hyphens">Split hyphenated words above char limit</label>
@@ -961,6 +984,13 @@ let noCrossTransition = true;
 // Small-word grouping preference
 let preferSmallGroup  = true;
 let smallWordThreshold = 3;
+
+// Pacing pauses — multipliers applied to the per-chunk delay when the chunk
+// ends a sentence / transition. 1.0 = no extra pause.
+let pauseSentence    = true;
+let sentenceMult     = 1.0;
+let pauseTransition  = true;
+let transitionMult   = 1.0;
 
 // Page settings
 let pageSize    = 200; // words per page
@@ -1626,9 +1656,23 @@ function tick() {
   scheduleFlash();
 }
 
+// Per-chunk pacing multiplier: applied to the delay BEFORE advancing past the
+// chunk currently being displayed (chunks[pos]). Sentence-end has priority
+// over transition.
+function chunkPaceMultiplier(chunkText) {
+  if (!chunkText) return 1.0;
+  if (pauseSentence   && endsSentence(chunkText))   return sentenceMult;
+  if (pauseTransition && endsTransition(chunkText)) return transitionMult;
+  return 1.0;
+}
+
 function scheduleFlash() {
   clearTimeout(timer);
-  if (!paused && mode === 'flash') timer = setTimeout(tick, wpmToMs(clampWpm(wpm)));
+  if (!paused && mode === 'flash') {
+    const base = wpmToMs(clampWpm(wpm));
+    const mult = chunkPaceMultiplier(chunks[pos]);
+    timer = setTimeout(tick, Math.round(base * mult));
+  }
 }
 
 // ══════════════════════════════════════════════
@@ -1685,9 +1729,12 @@ function updateAvgWpm() {
     return;
   }
   const wordsPerChunk = words.length / chunks.length;
-  const effective = Math.round(wordsPerChunk * wpm);
-  // TODO: when sentence/transition pacing pauses are added, factor those
-  // delays into the effective speed here.
+  // Mean pacing multiplier across all chunks: extra delay at sentence/transition
+  // endings reduces the effective WPM proportionally.
+  let multSum = 0;
+  for (let i = 0; i < chunks.length; i++) multSum += chunkPaceMultiplier(chunks[i]);
+  const avgMult = multSum / chunks.length;
+  const effective = Math.round(wordsPerChunk * wpm / avgMult);
   wpmValEl.textContent = wpm + '/' + effective;
   if (inlineEl) inlineEl.textContent = wpm + '/' + effective + ' WPM';
 }
@@ -1992,6 +2039,29 @@ alignCentralCharEl.addEventListener('change', () => {
   alignCentralChar = alignCentralCharEl.checked;
   if (mode === 'flash') renderFlash();
 });
+
+// Pacing pauses
+const pauseSentenceEl   = document.getElementById('pause-sentence');
+const sentenceMultEl    = document.getElementById('sentence-mult');
+const sentenceMultValEl = document.getElementById('sentence-mult-val');
+const pauseTransitionEl = document.getElementById('pause-transition');
+const transitionMultEl  = document.getElementById('transition-mult');
+const transitionMultValEl = document.getElementById('transition-mult-val');
+function onPacingChange() {
+  pauseSentence   = pauseSentenceEl.checked;
+  sentenceMult    = parseFloat(sentenceMultEl.value);
+  pauseTransition = pauseTransitionEl.checked;
+  transitionMult  = parseFloat(transitionMultEl.value);
+  sentenceMultValEl.textContent   = sentenceMult.toFixed(1) + '×';
+  transitionMultValEl.textContent = transitionMult.toFixed(1) + '×';
+  updateAvgWpm();
+  // If currently playing, re-arm timer so the new multiplier takes effect now.
+  if (!paused && mode === 'flash') { clearTimeout(timer); scheduleFlash(); }
+}
+pauseSentenceEl.addEventListener('change',   onPacingChange);
+sentenceMultEl.addEventListener('input',     onPacingChange);
+pauseTransitionEl.addEventListener('change', onPacingChange);
+transitionMultEl.addEventListener('input',   onPacingChange);
 
 // Page size
 pageSizeEl.addEventListener('input', () => {
