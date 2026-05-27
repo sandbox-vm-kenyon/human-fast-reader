@@ -1429,8 +1429,12 @@ function renderChunkWithOptionalCentralAlignment(chunkText) {
     wordDisplay.textContent = chunkText;
     return;
   }
-  const len = chunkText.length;
-  const centralIdx = Math.floor(len / 2);
+  // Strip trailing punctuation/whitespace so e.g. "when." centers on 'h' (the
+  // central char of "when") rather than on 'e'. For even-length words choose
+  // the earlier of the two middle characters via (len - 1) >> 1.
+  const trimmed = chunkText.replace(/[\s\p{P}]+$/u, '');
+  const effectiveLen = trimmed.length || chunkText.length;
+  const centralIdx = (effectiveLen - 1) >> 1;
   const pre  = chunkText.slice(0, centralIdx);
   const ch   = chunkText.slice(centralIdx, centralIdx + 1);
   const post = chunkText.slice(centralIdx + 1);
