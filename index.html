@@ -1203,9 +1203,15 @@ function applyFont(name, family, weight) {
   const ps = document.querySelector('#page-stage'); if (ps) ps.style.fontWeight = w;
   const triggerNameEl = document.getElementById('font-trigger-name');
   triggerNameEl.textContent = name;
-  // Render the font name in the actual selected font so users see the typeface.
+  // Render the font name AND the label above the button in the actual selected
+  // font + weight so users see the typeface (bold variants show as bold).
   triggerNameEl.style.fontFamily = family;
   triggerNameEl.style.fontWeight = w;
+  const triggerLabelEl = document.getElementById('font-trigger-label');
+  if (triggerLabelEl) {
+    triggerLabelEl.style.fontFamily = family;
+    triggerLabelEl.style.fontWeight = w;
+  }
   document.querySelectorAll('.font-item').forEach(el => {
     el.classList.toggle('selected', el.dataset.family === family && +el.dataset.weight === weight);
   });
