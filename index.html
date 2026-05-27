@@ -136,7 +136,9 @@
       content: '';
       position: absolute;
       left: 0; right: 0;
-      bottom: calc(50% - 0.85em);
+      /* Position relative to the reading font size so it scales with the text
+         and never overlaps the descenders when the user enlarges the size. */
+      bottom: calc(50% - var(--word-size) * 0.85);
       height: 2px;
       background: var(--text);
       opacity: 0.55;
