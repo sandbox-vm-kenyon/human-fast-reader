@@ -935,7 +935,7 @@
   <div class="slider-row indented-child">
     <label for="complexity-curve">Slowdown curve</label>
     <input type="number" id="complexity-curve" class="num-input" min="0.1" max="4" step="0.1" value="2.5">
-    <span class="val range-hint">0.1 (uniform) – 1.0 (no curve / linear) – 3.0 (curves up, outlier-focused)</span>
+    <span class="val range-hint">0.1 (curves down — fast early ramp, then plateau) – 1.0 (no curve / linear) – 3.0 (curves up, outlier-focused)</span>
   </div>
 
   <!-- Underline beneath the reading panel -->
@@ -1045,18 +1045,21 @@
       <strong>Multiplier</strong> sets how much extra time the longest chunks
       can pick up: 1.00 = off, higher = more extra time.
       <strong>Curve</strong> is the exponent in <code>y = x<sup>z</sup></code>:
-      <code>z = 1</code> is linear (no curve); <code>z &gt; 1</code> bends UP
-      (outliers penalized more than proportionally); <code>z &lt; 1</code>
-      bends DOWN (medium chunks pulled closer to the outlier); as <code>z</code>
-      approaches 0 the slowdown becomes uniform across all chunk lengths.
+      <code>z = 1</code> is linear (no curve); <code>z &gt; 1</code> bends UP —
+      most of the slowdown lives at the high end (outliers penalized
+      disproportionately); <code>z &lt; 1</code> bends DOWN — slowdown ramps
+      up fast early then plateaus, so short-to-medium chunks already feel
+      the slowdown while genuine outliers don't keep climbing. As
+      <code>z</code> approaches 0 the curve flattens further and every chunk
+      converges toward the same multiplier.
     </p>
 
     <h3>Suggested settings</h3>
     <ul>
       <li><strong>Default — curves up, outlier-focused:</strong> multiplier <code>1.20</code>, curve <code>2.5</code>. Short chunks ≈ 1.0×, 25-char outlier ≈ 3×.</li>
       <li><strong>No curve / linear:</strong> multiplier <code>1.80</code>, curve <code>1.0</code>. Slowdown grows in straight proportion to length. 5-char ≈ 1.4×, 12-char ≈ 2.0×, 25-char ≈ 3×.</li>
-      <li><strong>Curves down (sub-linear, <code>z &lt; 1</code>):</strong> multiplier <code>2.27</code>, curve <code>0.5</code>. Medium chunks pulled UP toward the outlier — short ≈ 1.7×, 25-char ≈ 3×. Useful if medium chunks feel too fast under the default.</li>
-      <li><strong>Uniform (curve → 0):</strong> multiplier <code>2.82</code>, curve <code>0.1</code>. Nearly the same multiplier applied to every chunk regardless of length — equivalent in spirit to a global slowdown.</li>
+      <li><strong>Curves down (sub-linear, <code>z &lt; 1</code>):</strong> multiplier <code>2.27</code>, curve <code>0.5</code>. Ramps up fast in the 5–15-char range and then plateaus — useful if you want a stronger pause on shorter-to-medium chunks but don't want huge outliers to keep climbing. 5-char ≈ 1.9×, 12-char ≈ 2.4×, 25-char ≈ 3.0×.</li>
+      <li><strong>Strong sub-linear (early ramp, hard plateau):</strong> multiplier <code>2.82</code>, curve <code>0.1</code>. Almost all the slowdown happens by ~5 chars; longer chunks barely add more. 5-char ≈ 2.55×, 12-char ≈ 2.85×, 25-char ≈ 3.0×.</li>
     </ul>
   </div>
 </div>
