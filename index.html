@@ -416,6 +416,12 @@
     .indented-child {
       margin-left: 24px;
     }
+    /* Toggle rows show an extra indent for the CHECKBOX (not just the label),
+       to make the row visibly indented beyond sibling slider-row.indented-child
+       labels (whose first child is text, with no checkbox preceding it). */
+    .toggle-row.indented-child {
+      margin-left: 48px;
+    }
     /* Slim preset-speed buttons */
     #wpm-preset-row {
       display: flex; gap: 6px; margin: 4px 0 0;
