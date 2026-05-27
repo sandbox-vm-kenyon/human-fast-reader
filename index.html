@@ -289,6 +289,22 @@
     .spd-btn { flex: 1; min-width: 0; padding: 10px 4px; font-size: 1rem; font-weight: 600; color: var(--muted); border-color: rgba(255,255,255,.08); }
     .spd-btn:hover { color: var(--text); }
     .spd-btn.default-mark { flex: 0 0 auto; padding: 10px 14px; border-color: color-mix(in srgb, var(--accent) 40%, transparent); color: color-mix(in srgb, var(--accent) 80%, var(--text)); }
+    /* Non-clickable WPM readout that replaces the old 300 WPM button. Fixed
+       width so the readout doesn't reflow as the displayed numbers change. */
+    .wpm-inline-display {
+      flex: 0 0 auto;
+      width: 130px;
+      padding: 10px 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: color-mix(in srgb, var(--accent) 80%, var(--text));
+      border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+      border-radius: 8px;
+      cursor: default;
+      user-select: none;
+    }
 
     /* ─────── Slider rows ─────── */
     .slider-row {
@@ -393,6 +409,13 @@
     }
     .indented-child {
       margin-left: 24px;
+    }
+    /* Toggle rows have an extra checkbox + gap (~26px) before their label
+       text, which pushes the visible label farther right than a slider-row's
+       label at the same row margin. Pull the toggle row left so the label
+       text lines up with sibling slider-row.indented-child labels. */
+    .toggle-row.indented-child {
+      margin-left: -2px;
     }
     /* Slim preset-speed buttons */
     #wpm-preset-row {
@@ -590,7 +613,7 @@
 <div id="speed-btns">
   <button class="spd-btn" data-delta="-40">&lt;&lt;40</button>
   <button class="spd-btn" data-delta="-10">&lt;10</button>
-  <button class="spd-btn default-mark" data-set="300">300 WPM</button>
+  <div class="spd-btn wpm-inline-display" id="wpm-inline-display">300/300 WPM</div>
   <button class="spd-btn" data-delta="+10">10&gt;</button>
   <button class="spd-btn" data-delta="+40">40&gt;&gt;</button>
 </div>
@@ -1648,8 +1671,10 @@ function setWpm(v) {
 }
 
 function updateAvgWpm() {
+  const inlineEl = document.getElementById('wpm-inline-display');
   if (!chunks.length || !words.length) {
     wpmValEl.textContent = wpm + '/—';
+    if (inlineEl) inlineEl.textContent = wpm + '/— WPM';
     return;
   }
   const wordsPerChunk = words.length / chunks.length;
@@ -1657,6 +1682,7 @@ function updateAvgWpm() {
   // TODO: when sentence/transition pacing pauses are added, factor those
   // delays into the effective speed here.
   wpmValEl.textContent = wpm + '/' + effective;
+  if (inlineEl) inlineEl.textContent = wpm + '/' + effective + ' WPM';
 }
 
 // ── Page navigation ──
