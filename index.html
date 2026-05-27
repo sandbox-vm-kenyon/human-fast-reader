@@ -615,6 +615,17 @@
       background: var(--surface); color: var(--text);
       border: 1px solid rgba(255,255,255,.15); cursor: pointer;
     }
+    #btn-toggle-settings {
+      margin-left: auto;
+      padding: 6px 10px; border-radius: 8px;
+      background: var(--surface); color: var(--text);
+      border: 1px solid rgba(255,255,255,.15); cursor: pointer;
+      font-size: 1.1rem; line-height: 1;
+    }
+    #btn-toggle-settings[aria-expanded="true"] {
+      background: color-mix(in srgb, var(--accent) 25%, var(--surface));
+      border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+    }
     .muted-label { color: var(--muted); font-size: .88rem; }
 
     /* ─────── Complexity slowdown help overlay ─────── */
@@ -828,7 +839,11 @@
   <div id="profile-row">
     <button id="btn-open-profiles" type="button">Load configuration profile…</button>
     <span id="active-profile-label" class="muted-label"></span>
+    <button id="btn-toggle-settings" type="button" aria-label="Toggle settings" aria-expanded="false">⚙</button>
   </div>
+
+  <!-- Settings body (hidden by default; toggled by the gear icon) -->
+  <div id="settings-body" hidden>
 
   <!-- Group settings (bordered cluster) -->
   <div class="grouping-cluster">
@@ -991,6 +1006,7 @@
     <input type="checkbox" id="pause-on-blur" checked>
     <label for="pause-on-blur">Pause playback when window loses focus</label>
   </div>
+  </div><!-- /#settings-body -->
 </div>
 
 <!-- ── Page settings ── -->
@@ -2400,6 +2416,20 @@ function applyProfile(name) {
   document.getElementById('profile-overlay').classList.remove('open');
   if (mode === 'flash') renderFlash();
 }
+
+// Toggle settings panel visibility via the gear icon
+document.getElementById('btn-toggle-settings').addEventListener('click', () => {
+  const btn = document.getElementById('btn-toggle-settings');
+  const body = document.getElementById('settings-body');
+  const isExpanded = btn.getAttribute('aria-expanded') === 'true';
+  if (isExpanded) {
+    body.setAttribute('hidden', '');
+    btn.setAttribute('aria-expanded', 'false');
+  } else {
+    body.removeAttribute('hidden');
+    btn.setAttribute('aria-expanded', 'true');
+  }
+});
 
 document.getElementById('btn-open-profiles').addEventListener('click', () => {
   document.getElementById('profile-overlay').classList.add('open');
