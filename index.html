@@ -341,7 +341,7 @@
 
     /* ─────── Font trigger button ─────── */
     #font-trigger-row { margin: 6px 0; }
-    #font-trigger-label { font-size: .85rem; color: var(--muted); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; margin-bottom: 4px; }
+    #font-trigger-label { font-family: var(--reader-font); font-size: .85rem; color: var(--muted); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; margin-bottom: 4px; }
     #font-trigger-controls { display: flex; gap: 4px; align-items: stretch; }
     #font-cycle-prev, #font-cycle-next {
       flex: 0 0 auto; padding: 9px 12px; font-size: 1.1rem; font-weight: 700;
@@ -613,7 +613,7 @@
 <div id="speed-btns">
   <button class="spd-btn" data-delta="-40">&lt;&lt;40</button>
   <button class="spd-btn" data-delta="-10">&lt;10</button>
-  <div class="spd-btn wpm-inline-display" id="wpm-inline-display">300/300 WPM</div>
+  <div class="spd-btn wpm-inline-display" id="wpm-inline-display">150/150 WPM</div>
   <button class="spd-btn" data-delta="+10">10&gt;</button>
   <button class="spd-btn" data-delta="+40">40&gt;&gt;</button>
 </div>
@@ -622,7 +622,7 @@
 <div class="slider-row">
   <label for="wpm-slider">WPM</label>
   <button class="nudge-btn" id="wpm-dec">&lt;</button>
-  <input type="range" id="wpm-slider" min="50" max="1000" step="10" value="300">
+  <input type="range" id="wpm-slider" min="50" max="1000" step="10" value="150">
   <button class="nudge-btn" id="wpm-inc">&gt;</button>
   <span class="val" id="wpm-val">—</span>
 </div>
@@ -930,7 +930,7 @@ let chunks = [];
 let pos    = 0;       // chunk index (flash) or word index (page)
 let paused = true;
 let mode   = 'flash'; // 'flash' | 'page'
-let wpm    = 300;
+let wpm    = 150;
 let timer  = null;
 
 // Group settings
