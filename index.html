@@ -2930,7 +2930,18 @@ document.getElementById('btn-download').addEventListener('click', () => {
 
 // Keyboard
 document.addEventListener('keydown', e => {
-  if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+  // Only skip when the user is actually typing — text/textarea. For sliders,
+  // number inputs etc., we want arrow keys to drive playback, not the
+  // currently-focused control, so we steal focus from them.
+  const tag = e.target.tagName;
+  const type = (e.target.type || '').toLowerCase();
+  const isTextEntry = tag === 'TEXTAREA' || (tag === 'INPUT' && (type === 'text' || type === 'url' || type === 'email' || type === 'search' || type === 'password'));
+  if (isTextEntry) return;
+  const isArrow = e.code === 'ArrowLeft' || e.code === 'ArrowRight' || e.code === 'ArrowUp' || e.code === 'ArrowDown';
+  if (isArrow && tag === 'INPUT' && typeof e.target.blur === 'function') {
+    // Drop focus from sliders / number inputs so they don't consume arrow keys.
+    e.target.blur();
+  }
   if (e.code === 'Space' && mode === 'flash') { e.preventDefault(); togglePlay(); }
   if (e.code === 'ArrowLeft') {
     if (mode === 'flash') { e.preventDefault(); stepBack(1); }
