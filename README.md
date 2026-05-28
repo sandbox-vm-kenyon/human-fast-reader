@@ -16,7 +16,7 @@ RSVP, or Rapid Serial Visual Presentation, has gotten recent attention because o
 
 Research indicates that RSVP performance may improve (performance trends positive) when pacing and flow are enhanced. This app explores RSVP configurations associated with those measured improvements to enhance and adjust flow and phrasing.
 
-### RSVP does have proven benefits for people with visually impairments or ADHD
+### RSVP does have proven benefits for people with visual impairments or ADHD
 
 Certain vision impairments have been shown to benefit from RSVP-style reading, and research has been done showing benefits in focus for people with ADHD.
 
