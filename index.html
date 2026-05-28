@@ -762,9 +762,9 @@
 
 <!-- ── Sentence navigation row (compact, same style as speed buttons) ── -->
 <div id="sentence-nav">
-  <button class="spd-btn" id="btn-prev-sentence">&lt;&lt; sentence</button>
-  <button class="spd-btn" id="btn-curr-sentence">&lt; this</button>
-  <button class="spd-btn" id="btn-next-sentence">next sentence &gt;&gt;</button>
+  <button class="spd-btn" id="btn-prev-sentence">prev sentence start</button>
+  <button class="spd-btn" id="btn-curr-sentence">curr sentence start</button>
+  <button class="spd-btn" id="btn-next-sentence">next sentence start</button>
 </div>
 
 <!-- ── Speed buttons ── -->
@@ -2369,15 +2369,12 @@ document.getElementById('btn-curr-sentence').addEventListener('click', () => {
   jumpToSentenceChunk(currentStartIdx);
 });
 document.getElementById('btn-prev-sentence').addEventListener('click', () => {
+  // Always go to the PREVIOUS sentence's start (the one before the current
+  // sentence's start). "curr sentence start" handles the within-sentence case.
   const { starts, currentStartIdx } = findCurrentSentenceStartIdx();
-  // If we're already at the current sentence's start, go to the prior one.
-  // Otherwise first click jumps to current start (per usual "back" semantics).
-  if (pos === currentStartIdx) {
-    const idx = starts.indexOf(currentStartIdx);
-    if (idx > 0) jumpToSentenceChunk(starts[idx - 1]);
-  } else {
-    jumpToSentenceChunk(currentStartIdx);
-  }
+  const idx = starts.indexOf(currentStartIdx);
+  if (idx > 0) jumpToSentenceChunk(starts[idx - 1]);
+  else jumpToSentenceChunk(0);
 });
 document.getElementById('btn-next-sentence').addEventListener('click', () => {
   const { starts, currentStartIdx } = findCurrentSentenceStartIdx();
