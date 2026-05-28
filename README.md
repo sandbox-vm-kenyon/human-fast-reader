@@ -29,12 +29,11 @@ Links:
 
 ---
 
-## Flow & rhythm: correcting the "word jackhammer"
+## Flow & rhythm
 
-A common complaint with plain RSVP is the **word-jackhammer feel** — every chunk
+RSVP feel like a 'word-jackhammer' — every chunk
 gets the same fixed duration, so short connective words flash by at the same
-pace as long, dense ones. Reading rhythm collapses, comprehension drops, and
-the brain has to re-stitch sentences after the fact.
+pace as long, dense ones. Since this doesn't match the natural fluctuation of attention time given to simpler vs more comlex words/phrases, it feels jarring and isn't efficient. Comprehension and comfort seeem to drop with this misalignment.
 
 This app fixes that with a per-chunk **Complexity slowdown** curve. Each chunk's
 display time gets a length-aware bump along a quadratic Bezier shape you control
