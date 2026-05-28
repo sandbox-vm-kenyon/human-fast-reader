@@ -1113,7 +1113,7 @@
     <ul>
       <li>Bigger / busier chunk → longer display time.</li>
       <li>Shape is a quadratic Bezier from (0, 1×) to (Endpoint chars, Endpoint multiplier).</li>
-      <li>Adds to (not multiplies with) the punctuation pacing pause.</li>
+      <li>Multiplies with the punctuation pacing pause (so a sentence end inside a long chunk still gets its full extra hold).</li>
     </ul>
 
     <h3>Endpoint chars / multiplier</h3>
@@ -2119,11 +2119,9 @@ function scheduleFlash() {
     if (maintainEffectiveWpm && cachedAvgChunkMultiplier > 0) {
       base = base / cachedAvgChunkMultiplier;
     }
-    // Additive composition: each factor contributes (multiplier - 1) of extra
-    // delay against the base, summed.
-    const mult = 1
-      + (chunkPaceMultiplier(chunks[pos]) - 1)
-      + (chunkComplexitySlowdown(chunks[pos]) - 1);
+    // Multiplicative composition: pacing pause stacks on top of the complexity
+    // slowdown so the punctuation beat isn't overshadowed by long-chunk delay.
+    const mult = chunkPaceMultiplier(chunks[pos]) * chunkComplexitySlowdown(chunks[pos]);
     timer = setTimeout(tick, Math.round(base * mult));
   }
 }
@@ -2190,9 +2188,7 @@ function updateAvgWpm() {
   const wordsPerChunk = words.length / chunks.length;
   let multSum = 0;
   for (let i = 0; i < chunks.length; i++) {
-    multSum += 1
-      + (chunkPaceMultiplier(chunks[i]) - 1)
-      + (chunkComplexitySlowdown(chunks[i]) - 1);
+    multSum += chunkPaceMultiplier(chunks[i]) * chunkComplexitySlowdown(chunks[i]);
   }
   cachedAvgChunkMultiplier = multSum / chunks.length;
   // When makeup gain is on, base delay is divided by avgMult, so the average
