@@ -998,7 +998,7 @@
         <button class="nudge-btn" id="bezier-rotation-inc" type="button">&gt;</button>
       </div>
       <div class="toggle-row">
-        <input type="checkbox" id="complexity-extra-words" checked>
+        <input type="checkbox" id="complexity-extra-words">
         <label for="complexity-extra-words">Increase weight for multi-word &amp; hyphenated</label>
       </div>
       <div class="toggle-row">
@@ -1301,7 +1301,7 @@ let bezierEndpointY = 2.1;
 let bezierMidpointX = 5;
 let bezierStrength  = 21.5;
 let bezierRotationDeg = 90;
-let complexityExtraWords = true; // add (wordCount - 1) bonus for multi-word / hyphenated chunks
+let complexityExtraWords = false; // add (wordCount - 1) bonus for multi-word / hyphenated chunks
 let maintainEffectiveWpm = false; // compressor-style makeup gain: keep displayed WPM matching no-slowdown baseline
 
 // Page settings
