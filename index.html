@@ -1002,7 +1002,7 @@
         <label for="complexity-extra-words">Increase weight for multi-word &amp; hyphenated</label>
       </div>
       <div class="toggle-row">
-        <input type="checkbox" id="maintain-effective-wpm">
+        <input type="checkbox" id="maintain-effective-wpm" checked>
         <label for="maintain-effective-wpm">Maintain effective WPM (makeup gain)</label>
       </div>
     </div>
@@ -1302,7 +1302,7 @@ let bezierMidpointX = 5;
 let bezierStrength  = 21.5;
 let bezierRotationDeg = 90;
 let complexityExtraWords = false; // add (wordCount - 1) bonus for multi-word / hyphenated chunks
-let maintainEffectiveWpm = false; // compressor-style makeup gain: keep displayed WPM matching no-slowdown baseline
+let maintainEffectiveWpm = true; // compressor-style makeup gain: keep displayed WPM matching no-slowdown baseline
 
 // Page settings
 let pageSize    = 200; // words per page
